@@ -4,7 +4,7 @@
 #
 # `right` prepends, so the first item added ends up furthest right. Added in the
 # order below they read, left to right, as:
-#   [ wifi ] [ volume ] [ battery ] [ clock ]
+#   [ input ] [ wifi ] [ volume ] [ battery ] [ clock ]
 
 status=(
   background.drawing=off
@@ -36,3 +36,14 @@ sketchybar --add item clock right \
   --set wifi "${status[@]}" \
   script="$PLUGIN_DIR/wifi.sh" \
   --subscribe wifi wifi_change system_woke
+
+# Keyboard input source. macOS posts a distributed notification when the
+# selection changes, and SketchyBar can turn any such notification into an event,
+# which avoids polling for it.
+sketchybar --add event input_source_change AppleSelectedInputSourcesChangedNotification
+
+sketchybar --add item input_source right \
+  --set input_source "${status[@]}" \
+  icon.color="$PEACH" \
+  script="$PLUGIN_DIR/input_source.sh" \
+  --subscribe input_source input_source_change
