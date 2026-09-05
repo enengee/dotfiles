@@ -24,3 +24,6 @@ export STATE_FILE="${TMPDIR:-/tmp}/sketchybar-workspace.state"
 export INPUT_STATE_FILE="${TMPDIR:-/tmp}/sketchybar-inputs.state"
 export DISPLAY_STATE_FILE="${TMPDIR:-/tmp}/sketchybar-displays.state"
 export MODE_STATE_FILE="${TMPDIR:-/tmp}/sketchybar-mode.state"
+
+# PID of the `caffeinate` process the caffeine item owns, when it is on.
+export CAFFEINE_PID_FILE="${TMPDIR:-/tmp}/sketchybar-caffeinate.pid"

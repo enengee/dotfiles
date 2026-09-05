@@ -4,7 +4,7 @@
 #
 # `right` prepends, so the first item added ends up furthest right. Added in the
 # order below they read, left to right, as:
-#   [ input ] [ wifi ] [ volume ] [ battery ] [ clock ]
+#   [ caffeine ] [ input ] [ wifi ] [ volume ] [ battery ] [ clock ]
 
 status=(
   background.drawing=off
@@ -47,3 +47,11 @@ sketchybar --add item input_source right \
   icon.color="$PEACH" \
   script="$PLUGIN_DIR/input_source.sh" \
   --subscribe input_source input_source_change
+
+# Keep-awake toggle. Click flips it; the plugin owns the `caffeinate` process, so
+# there is no external state to read and nothing to poll.
+sketchybar --add item caffeine right \
+  --set caffeine "${status[@]}" \
+  script="$PLUGIN_DIR/caffeine.sh" \
+  click_script="$PLUGIN_DIR/caffeine.sh toggle" \
+  --subscribe caffeine system_woke
