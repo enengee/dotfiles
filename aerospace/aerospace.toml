@@ -243,3 +243,75 @@ gaps.outer.right =      4
     alt-shift-j = ['join-with down', 'mode main']
     alt-shift-k = ['join-with up', 'mode main']
     alt-shift-l = ['join-with right', 'mode main']
+
+
+# ==============================================================================
+# Always-floating applications
+# ==============================================================================
+#
+# Apps whose windows should never be tiled: settings panes, one-shot utilities
+# and dialog-shaped windows that look wrong stretched to half the screen.
+#
+# These run when AeroSpace *detects* a window — every new window, plus existing
+# windows at AeroSpace startup. See:
+# https://nikitabobko.github.io/AeroSpace/guide#on-window-detected-callback
+#
+# To add an app, copy a block and change the id. Find an id by opening a window
+# of the app and running:
+#
+#   aerospace list-windows --all --format '%{app-bundle-id}|%{app-name}'
+#
+# or, without opening it:
+#
+#   osascript -e 'id of app "App Name"'
+#
+# `if.app-id` is an exact match, not a pattern — a typo silently does nothing
+# rather than erroring, so verify the id rather than guessing it. Use
+# `if.app-name-regex-substring` instead if you want one block to cover several
+# apps, at the cost of matching on a localizable display name.
+#
+# Only the FIRST matching block runs. Add `check-further-callbacks = true` to a
+# block if later blocks should also apply to the same window.
+#
+# To float something case by case instead, the service mode already has it:
+# alt-shift-; then f toggles the focused window between floating and tiling.
+
+[[on-window-detected]]
+if.app-id = 'com.apple.systempreferences' # System Settings
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.calculator' # Calculator
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.ActivityMonitor' # Activity Monitor
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.DiskUtility' # Disk Utility
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.SystemProfiler' # System Information
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Console' # Console
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.AppStore' # App Store
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.ScreenContinuity' # iPhone Mirroring
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.1password.1password' # 1Password
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.cisco.secureclient.gui' # Cisco Secure Client
+run = 'layout floating'
