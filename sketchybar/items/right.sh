@@ -7,11 +7,12 @@ status=(
   icon.font="$TEXT_FONT:Regular:14.0"
 )
 
+# Seconds require a one-second tick; nothing emits an event for the clock.
 sketchybar --add item clock right \
   --set clock "${status[@]}" \
   icon="$ICON_CLOCK" \
   icon.color="$MAUVE" \
-  update_freq=10 \
+  update_freq=1 \
   script="$PLUGIN_DIR/clock.sh" \
   \
   --add item battery right \
