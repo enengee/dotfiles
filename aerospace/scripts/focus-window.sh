@@ -14,6 +14,11 @@
 # Out-of-range indices exit quietly: pressing alt-7 in a workspace holding three
 # windows should do nothing, not error.
 
+# Homebrew is /opt/homebrew on Apple Silicon and /usr/local on Intel, and
+# AeroSpace launches callbacks with a minimal PATH, so set both rather than
+# hardcoding one prefix.
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
 index=$1
 
 case "$index" in
@@ -21,9 +26,9 @@ case "$index" in
 esac
 [ "$index" -ge 1 ] || exit 1
 
-id=$(/opt/homebrew/bin/aerospace list-windows --workspace focused \
+id=$(aerospace list-windows --workspace focused \
   --format '%{window-id}' 2>/dev/null | sed -n "${index}p")
 
 [ -n "$id" ] || exit 0
 
-exec /opt/homebrew/bin/aerospace focus --window-id "$id"
+exec aerospace focus --window-id "$id"

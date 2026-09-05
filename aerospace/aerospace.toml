@@ -13,7 +13,7 @@ after-startup-command = [
     # SketchyBar itself runs as a brew service (`brew services start sketchybar`).
     # Only ask the running instance to reload, so workspace items are rebuilt
     # against the AeroSpace instance that just started.
-    'exec-and-forget /opt/homebrew/bin/sketchybar --reload',
+    'exec-and-forget /bin/bash -c "PATH=/opt/homebrew/bin:/usr/local/bin:$PATH sketchybar --reload"',
 ]
 
 # Start AeroSpace at login
@@ -65,7 +65,7 @@ persistent-workspaces = ['home', 'personal', 'psa', 'upma']
 # changes. See ~/.config/sketchybar/items/workspace.sh for the subscriber.
 exec-on-workspace-change = [
     '/bin/bash', '-c',
-    '/opt/homebrew/bin/sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE PREV_WORKSPACE=$AEROSPACE_PREV_WORKSPACE',
+    'PATH=/opt/homebrew/bin:/usr/local/bin:$PATH sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE PREV_WORKSPACE=$AEROSPACE_PREV_WORKSPACE',
 ]
 
 # Redraw when focus moves between windows too, so the highlighted window item
@@ -80,7 +80,7 @@ exec-on-workspace-change = [
 # to be exec-and-forget, and the shell is needed because exec-and-forget does not
 # expand variables itself.
 on-focus-changed = [
-    'exec-and-forget /bin/bash -c "/opt/homebrew/bin/sketchybar --trigger aerospace_focus_change FOCUSED_WINDOW_ID=$AEROSPACE_WINDOW_ID"',
+    'exec-and-forget /bin/bash -c "PATH=/opt/homebrew/bin:/usr/local/bin:$PATH sketchybar --trigger aerospace_focus_change FOCUSED_WINDOW_ID=$AEROSPACE_WINDOW_ID"',
 ]
 
 # A callback that runs every time binding mode changes
@@ -90,7 +90,7 @@ on-focus-changed = [
 # service mode — on the SketchyBar workspace pill. The callback carries no
 # payload, so the plugin reads `aerospace list-modes --current` itself.
 on-mode-changed = [
-    'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_mode_change',
+    'exec-and-forget /bin/bash -c "PATH=/opt/homebrew/bin:/usr/local/bin:$PATH sketchybar --trigger aerospace_mode_change"',
 ]
 
 focus-follows-mouse.enabled = false
@@ -223,7 +223,7 @@ gaps.outer.right =      4
     alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
 
     # Reload SketchyBar (picks up config edits without restarting the service)
-    alt-shift-r = 'exec-and-forget /opt/homebrew/bin/sketchybar --reload'
+    alt-shift-r = 'exec-and-forget /bin/bash -c "PATH=/opt/homebrew/bin:/usr/local/bin:$PATH sketchybar --reload"'
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#mode
     alt-shift-semicolon = 'mode service'
