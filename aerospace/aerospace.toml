@@ -56,10 +56,12 @@ automatically-unhide-macos-hidden-apps = false
 # even when they are invisible.
 # This config option is only available since 'config-version = 2'
 # Fallback value (if you omit the key): persistent-workspaces = []
-# Keeping these alive means SketchyBar can create an item for each of them at
-# startup, so a workspace does not vanish from the bar once you close its last
-# window.
-persistent-workspaces = ['home', 'personal', 'psa', 'upma']
+#
+# Deliberately empty. SketchyBar creates its workspace pills per *monitor* and
+# labels each from whichever workspace is visible there, so it does not need any
+# workspace to exist ahead of time. Naming workspaces here would only pin a
+# machine-specific set into a config meant to be portable.
+persistent-workspaces = []
 
 # Tell SketchyBar to redraw the workspace list whenever the focused workspace
 # changes. See ~/.config/sketchybar/items/workspace.sh for the subscriber.
@@ -204,18 +206,29 @@ gaps.outer.right =      4
     alt-0 = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/focus-window.sh 10"'
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#workspace
-    # Workspace switching moved off alt-N to make room for the bindings above.
-    # Named workspaces, in the order they appear in persistent-workspaces.
-    ctrl-alt-1 = 'workspace home'
-    ctrl-alt-2 = 'workspace personal'
-    ctrl-alt-3 = 'workspace psa'
-    ctrl-alt-4 = 'workspace upma'
+    # Numbered rather than named: AeroSpace creates a workspace on demand, so
+    # numbers carry no assumption about what this machine is used for and need no
+    # persistent-workspaces entry.
+    ctrl-alt-1 = 'workspace 1'
+    ctrl-alt-2 = 'workspace 2'
+    ctrl-alt-3 = 'workspace 3'
+    ctrl-alt-4 = 'workspace 4'
+    ctrl-alt-5 = 'workspace 5'
+    ctrl-alt-6 = 'workspace 6'
+    ctrl-alt-7 = 'workspace 7'
+    ctrl-alt-8 = 'workspace 8'
+    ctrl-alt-9 = 'workspace 9'
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#move-node-to-workspace
-    alt-shift-1 = 'move-node-to-workspace home'
-    alt-shift-2 = 'move-node-to-workspace personal'
-    alt-shift-3 = 'move-node-to-workspace psa'
-    alt-shift-4 = 'move-node-to-workspace upma'
+    alt-shift-1 = 'move-node-to-workspace 1'
+    alt-shift-2 = 'move-node-to-workspace 2'
+    alt-shift-3 = 'move-node-to-workspace 3'
+    alt-shift-4 = 'move-node-to-workspace 4'
+    alt-shift-5 = 'move-node-to-workspace 5'
+    alt-shift-6 = 'move-node-to-workspace 6'
+    alt-shift-7 = 'move-node-to-workspace 7'
+    alt-shift-8 = 'move-node-to-workspace 8'
+    alt-shift-9 = 'move-node-to-workspace 9'
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#workspace-back-and-forth
     alt-tab = 'workspace-back-and-forth'
