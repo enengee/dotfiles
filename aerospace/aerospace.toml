@@ -301,6 +301,10 @@ if.app-id = 'com.apple.Console' # Console
 run = 'layout floating'
 
 [[on-window-detected]]
+if.app-id = 'com.apple.finder' # Finder
+run = 'layout floating'
+
+[[on-window-detected]]
 if.app-id = 'com.apple.AppStore' # App Store
 run = 'layout floating'
 
