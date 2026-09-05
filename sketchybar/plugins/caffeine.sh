@@ -53,8 +53,10 @@ if [ "$1" = "toggle" ]; then
   if is_awake; then stop; else start; fi
 fi
 
+# Icon-only: the glyph changes between an open and a struck-through eye, so a
+# label would just repeat what the icon already says.
 if is_awake; then
-  sketchybar --set "$NAME" icon="$ICON_CAFFEINE" icon.color="$YELLOW" label="on"
+  sketchybar --set "$NAME" icon="$ICON_AWAKE" icon.color="$YELLOW"
 else
-  sketchybar --set "$NAME" icon="$ICON_CAFFEINE" icon.color="$OVERLAY0" label="off"
+  sketchybar --set "$NAME" icon="$ICON_ASLEEP" icon.color="$OVERLAY0"
 fi

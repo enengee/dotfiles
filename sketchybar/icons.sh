@@ -19,7 +19,17 @@ printf -v ICON_OVERFLOW '\xef\x85\x81'  # U+F141 ellipsis-h
 printf -v ICON_CLOCK '\xef\x80\x97'     # U+F017 clock
 printf -v ICON_WIFI '\xef\x87\xab'      # U+F1EB wifi
 printf -v ICON_INPUT '\xef\x84\x9c'     # U+F11C keyboard
-printf -v ICON_CAFFEINE '\xef\x83\xb4'  # U+F0F4 coffee
+
+# Keep-awake states. An open eye reads as "the display is being held awake" and a
+# struck-through eye as "sleep is allowed", so the glyph alone carries the state
+# and the item needs no label.
+#
+# Swap in a different pair by changing only these two, both 3-byte FontAwesome
+# glyphs like the ones above:
+#   moon / sun    U+F186 '\xef\x86\x86'  U+F185 '\xef\x86\x85'
+#   coffee cup    U+F0F4 '\xef\x83\xb4'  (single glyph, no natural "off" form)
+printf -v ICON_AWAKE '\xef\x81\xae'     # U+F06E eye
+printf -v ICON_ASLEEP '\xef\x81\xb0'    # U+F070 eye-slash
 
 printf -v ICON_BATTERY_100 '\xef\x89\x80' # U+F240 battery-full
 printf -v ICON_BATTERY_75 '\xef\x89\x81'  # U+F241 battery-three-quarters
@@ -33,7 +43,8 @@ printf -v ICON_VOLUME_MID '\xef\x80\xa7'  # U+F027 volume-down
 printf -v ICON_VOLUME_LOW '\xef\x80\xa6'  # U+F026 volume-off
 printf -v ICON_VOLUME_MUTE '\xef\x80\xa6' # U+F026 volume-off
 
-export ICON_WORKSPACE ICON_OVERFLOW ICON_CLOCK ICON_WIFI ICON_INPUT ICON_CAFFEINE
+export ICON_WORKSPACE ICON_OVERFLOW ICON_CLOCK ICON_WIFI ICON_INPUT
+export ICON_AWAKE ICON_ASLEEP
 export ICON_BATTERY_100 ICON_BATTERY_75 ICON_BATTERY_50 ICON_BATTERY_25 ICON_BATTERY_0
 export ICON_CHARGING
 export ICON_VOLUME_HIGH ICON_VOLUME_MID ICON_VOLUME_LOW ICON_VOLUME_MUTE

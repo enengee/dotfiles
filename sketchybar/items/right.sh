@@ -52,9 +52,12 @@ sketchybar --add item input_source right \
   --subscribe input_source input_source_change
 
 # Keep-awake toggle. Click flips it; the plugin owns the `caffeinate` process, so
-# there is no external state to read and nothing to poll.
+# there is no external state to read and nothing to poll. Icon-only: the glyph
+# itself distinguishes the two states.
 sketchybar --add item caffeine right \
   --set caffeine "${status[@]}" \
+  label.drawing=off \
+  icon.font="$TEXT_FONT:Regular:15.0" \
   script="$PLUGIN_DIR/caffeine.sh" \
   click_script="$PLUGIN_DIR/caffeine.sh toggle" \
   --subscribe caffeine system_woke
