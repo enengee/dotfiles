@@ -5,33 +5,42 @@ CONFIG_DIR="${CONFIG_DIR:-$HOME/.config/sketchybar}"
 source "$CONFIG_DIR/colors.sh"
 source "$CONFIG_DIR/icons.sh"
 
-MAX_SSID_CHARS=18
-
-# `ipconfig getsummary` rather than the more obvious alternatives, both of which
-# are dead ends on current macOS:
+# This shows the IP rather than the network name, because on current macOS a
+# script simply cannot read the SSID. Do not "fix" this by reaching for one of
+# the usual commands — all of them have been checked on macOS 26:
 #
-#   * `airport -I` was removed (the Apple80211 private framework binary is gone).
-#   * `networksetup -getairportnetwork en0` answers "You are not associated with
-#     an AirPort network" even while connected, unless the calling binary holds
-#     Location Services permission.
-interface=$(route -n get default 2>/dev/null | awk '/interface:/ {print $2; exit}')
+#   ipconfig getsummary en0      -> "SSID : <redacted>" (literally that string)
+#   system_profiler SPAirPortDataType
+#                               -> network name also "<redacted>", and it takes
+#                                  3.6s, far too slow for a bar item
+#   networksetup -getairportnetwork en0
+#                               -> "You are not associated with an AirPort
+#                                  network" even while connected
+#   airport -I                  -> removed; the Apple80211 private binary is gone
+#
+# Since macOS 14 the SSID is gated behind Location Services authorization for the
+# *calling* process. Getting it would mean shipping a signed .app bundle with
+# NSLocationUsageDescription that asks via CLLocationManager, then calling that
+# helper from here. `sudo wdutil info` also reveals it, but wiring passwordless
+# sudo into a status bar trades a real privilege for a cosmetic label.
+#
+# Association is still detectable: the SSID *line* is present when associated,
+# only its value is redacted.
+
+interface=$(networksetup -listallhardwareports 2>/dev/null |
+  awk '/Hardware Port: Wi-Fi/ { getline; print $2; exit }')
 [ -n "$interface" ] || interface=en0
 
-ssid=$(ipconfig getsummary "$interface" 2>/dev/null |
-  awk -F' SSID : ' '/ SSID : / {print $2; exit}')
+power=$(networksetup -getairportpower "$interface" 2>/dev/null)
 
-# Fall back to en0 when the default route is not the Wi-Fi interface, for example
-# while a dock's Ethernet is plugged in.
-if [ -z "$ssid" ] && [ "$interface" != "en0" ]; then
-  ssid=$(ipconfig getsummary en0 2>/dev/null |
-    awk -F' SSID : ' '/ SSID : / {print $2; exit}')
-fi
-
-if [ -n "$ssid" ]; then
-  if [ "${#ssid}" -gt "$MAX_SSID_CHARS" ]; then
-    ssid="${ssid:0:$MAX_SSID_CHARS}…"
-  fi
-  sketchybar --set "$NAME" icon="$ICON_WIFI" icon.color="$GREEN" label="$ssid"
-else
+if [ "${power##*: }" = "Off" ]; then
   sketchybar --set "$NAME" icon="$ICON_WIFI" icon.color="$RED" label="off"
+elif ipconfig getsummary "$interface" 2>/dev/null | grep -q ' SSID : '; then
+  address=$(ipconfig getifaddr "$interface" 2>/dev/null)
+  sketchybar --set "$NAME" \
+    icon="$ICON_WIFI" \
+    icon.color="$GREEN" \
+    label="${address:-up}"
+else
+  sketchybar --set "$NAME" icon="$ICON_WIFI" icon.color="$YELLOW" label="—"
 fi
