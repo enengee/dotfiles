@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
+#
 # Status items on the right side of the bar.
+#
+# `right` prepends, so the first item added ends up furthest right. Added in the
+# order below they read, left to right, as:
+#   [ wifi ] [ volume ] [ battery ] [ clock ]
 
 status=(
   background.drawing=off
@@ -25,4 +30,9 @@ sketchybar --add item clock right \
   --set volume "${status[@]}" \
   icon.color="$SAPPHIRE" \
   script="$PLUGIN_DIR/volume.sh" \
-  --subscribe volume volume_change
+  --subscribe volume volume_change \
+  \
+  --add item wifi right \
+  --set wifi "${status[@]}" \
+  script="$PLUGIN_DIR/wifi.sh" \
+  --subscribe wifi wifi_change system_woke

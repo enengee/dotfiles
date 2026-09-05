@@ -17,6 +17,7 @@
 printf -v ICON_WORKSPACE '\xef\x84\x88' # U+F108 desktop
 printf -v ICON_OVERFLOW '\xef\x85\x81'  # U+F141 ellipsis-h
 printf -v ICON_CLOCK '\xef\x80\x97'     # U+F017 clock
+printf -v ICON_WIFI '\xef\x87\xab'      # U+F1EB wifi
 
 printf -v ICON_BATTERY_100 '\xef\x89\x80' # U+F240 battery-full
 printf -v ICON_BATTERY_75 '\xef\x89\x81'  # U+F241 battery-three-quarters
@@ -30,7 +31,7 @@ printf -v ICON_VOLUME_MID '\xef\x80\xa7'  # U+F027 volume-down
 printf -v ICON_VOLUME_LOW '\xef\x80\xa6'  # U+F026 volume-off
 printf -v ICON_VOLUME_MUTE '\xef\x80\xa6' # U+F026 volume-off
 
-export ICON_WORKSPACE ICON_OVERFLOW ICON_CLOCK
+export ICON_WORKSPACE ICON_OVERFLOW ICON_CLOCK ICON_WIFI
 export ICON_BATTERY_100 ICON_BATTERY_75 ICON_BATTERY_50 ICON_BATTERY_25 ICON_BATTERY_0
 export ICON_CHARGING
 export ICON_VOLUME_HIGH ICON_VOLUME_MID ICON_VOLUME_LOW ICON_VOLUME_MUTE
