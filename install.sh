@@ -77,7 +77,7 @@ open -a AeroSpace 2>/dev/null || warn "start AeroSpace.app manually"
 
 cat <<'MANUAL'
 
-==> Three things this script cannot do for you
+==> Two things this script cannot do for you
 
   1. Hide the macOS menu bar
      System Settings > Control Center > Automatically hide and show the menu bar
@@ -89,8 +89,7 @@ cat <<'MANUAL'
      plus externals that reserve nothing. On other hardware windows will either
      overlap the bar or leave a gap. README.md has the measuring command.
 
-  3. Rename the workspaces
-     persistent-workspaces and the ctrl-alt-N / alt-shift-N bindings in
-     aerospace.toml use names that are almost certainly not yours.
+  3. Nothing — workspaces are numbered and created on demand, so there is no
+     machine-specific workspace set to fix up.
 
 MANUAL

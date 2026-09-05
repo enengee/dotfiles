@@ -53,8 +53,10 @@ externals start reserving ~24pt themselves, making 36 too much.
 
 ### Workspace names
 
-`persistent-workspaces` and the `ctrl-alt-N` / `alt-shift-N` bindings in
-`aerospace.toml` name specific workspaces. Rename all three places together.
+Workspaces are numbered (`ctrl-alt-1` … `ctrl-alt-9`) and `persistent-workspaces`
+is empty, so nothing about the workspace set is baked into the config — AeroSpace
+creates a workspace when you first switch to it and drops it when it empties. Name
+them in `aerospace.toml` if you prefer, but then each machine needs its own set.
 
 ### Floating applications
 
@@ -82,8 +84,8 @@ for a font whose weights you have.
 | `alt-1` … `alt-9`, `alt-0` | Focus the Nth window of the workspace, matching the bar's icon order |
 | `alt-h/j/k/l` | Focus left / down / up / right |
 | `alt-shift-h/j/k/l` | Move window |
-| `ctrl-alt-1` … `ctrl-alt-4` | Switch workspace |
-| `alt-shift-1` … `alt-shift-4` | Move window to workspace |
+| `ctrl-alt-1` … `ctrl-alt-9` | Switch workspace |
+| `alt-shift-1` … `alt-shift-9` | Move window to workspace |
 | `alt-tab` | Previous workspace |
 | `alt-shift-tab` | Move workspace to next monitor |
 | `alt-f` | Fullscreen |
