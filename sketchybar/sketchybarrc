@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+#
+# SketchyBar + AeroSpace.
+#
+# Left side of the bar: for each monitor, the workspace visible on it followed
+# by one app icon per window open in that workspace.
+#
+#   [ 󰍹 personal ]  [ 󰇧 ] [  ] [  ]
+#
+# Everything on the left is repainted by plugins/workspace.sh, driven by the
+# hidden `window_watcher` item. It is entirely event-driven — no polling — with
+# AeroSpace firing the events from `exec-on-workspace-change` and
+# `on-focus-changed` in aerospace.toml.
+
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+export CONFIG_DIR="$HOME/.config/sketchybar"
+export PLUGIN_DIR="$CONFIG_DIR/plugins"
+export ITEM_DIR="$CONFIG_DIR/items"
+
+# Tunables (fonts, slot count) live in config.sh so the plugin scripts can
+# source the same values — see the note in that file.
+source "$CONFIG_DIR/config.sh"
+source "$CONFIG_DIR/colors.sh"
+source "$CONFIG_DIR/icons.sh"
+
+##### Bar #####
+sketchybar --bar \
+  position=top \
+  height=32 \
+  blur_radius=20 \
+  color="$BAR_COLOR" \
+  padding_left=6 \
+  padding_right=6 \
+  sticky=on
+
+##### Item defaults #####
+sketchybar --default \
+  updates=when_shown \
+  padding_left=4 \
+  padding_right=4 \
+  icon.font="$TEXT_FONT:Bold:13.0" \
+  icon.color="$ICON_COLOR" \
+  icon.padding_left=6 \
+  icon.padding_right=4 \
+  label.font="$TEXT_FONT:Semibold:13.0" \
+  label.color="$LABEL_COLOR" \
+  label.padding_left=4 \
+  label.padding_right=6 \
+  background.height=24 \
+  background.corner_radius=6 \
+  background.color="$ITEM_BG_COLOR"
+
+##### Items #####
+# The window list already highlights the focused window, so there is no
+# separate front_app item.
+source "$ITEM_DIR/workspace.sh"
+source "$ITEM_DIR/right.sh"
+
+##### Paint the initial state #####
+# Drop the caches: the items were just recreated, so the previous run's state
+# says nothing about what is currently on the bar.
+rm -f "$STATE_FILE" "$INPUT_STATE_FILE" "$DISPLAY_STATE_FILE" "$MODE_STATE_FILE"
+
+sketchybar --update
+"$PLUGIN_DIR/workspace.sh"
