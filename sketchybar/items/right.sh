@@ -8,7 +8,10 @@
 
 status=(
   background.drawing=off
-  label.font="$TEXT_FONT:Semibold:13.0"
+  # Regular, not Semibold: Hack has no Semibold face, and the font macOS
+  # substitutes has proportional digits, so the clock's seconds would change the
+  # item's width every tick and nudge the whole bar sideways.
+  label.font="$TEXT_FONT:Regular:13.0"
   icon.font="$TEXT_FONT:Regular:14.0"
 )
 

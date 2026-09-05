@@ -35,6 +35,10 @@ sketchybar --bar \
   sticky=on
 
 ##### Item defaults #####
+# Hack ships Regular, Bold, Italic and BoldItalic only. Asking for a weight it
+# does not have (Semibold, say) makes macOS silently substitute a different font,
+# and the substitute has *proportional* digits — which makes every item shift
+# horizontally each time the clock's seconds tick. Stick to real faces.
 sketchybar --default \
   updates=when_shown \
   padding_left=4 \
@@ -43,7 +47,7 @@ sketchybar --default \
   icon.color="$ICON_COLOR" \
   icon.padding_left=6 \
   icon.padding_right=4 \
-  label.font="$TEXT_FONT:Semibold:13.0" \
+  label.font="$TEXT_FONT:Regular:13.0" \
   label.color="$LABEL_COLOR" \
   label.padding_left=4 \
   label.padding_right=6 \
