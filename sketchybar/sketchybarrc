@@ -3,9 +3,11 @@
 # SketchyBar + AeroSpace.
 #
 # Left side of the bar: for each monitor, the workspace visible on it followed
-# by one app icon per window open in that workspace.
+# by one app icon per window open in that workspace. Workspace names are read
+# from AeroSpace at paint time, never listed here, so numbered or named
+# workspaces both work with no config change.
 #
-#   [ 󰍹 personal ]  [ 󰇧 ] [  ] [  ]
+#   [ 󰍹 2 ]  [ 󰇧 ] [  ] [  ]
 #
 # Everything on the left is repainted by plugins/workspace.sh, driven by the
 # hidden `window_watcher` item. It is entirely event-driven — no polling — with

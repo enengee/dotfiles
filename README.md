@@ -4,8 +4,12 @@ AeroSpace tiling window manager and a SketchyBar status bar that shows, per
 monitor, the workspace visible on it and an app icon per window inside it.
 
 ```
-[ 󰍹 personal ] [  ] [  ] [  ]              [  ] [ ⌨ ABC ] [ 󰖩 192.168.0.2 ] [ 🔉 44% ] [ 🔋 87% ] [ 🕐 Sat 06 Sep 00:14:22 ]
+[ 󰍹 2 ] [  ] [  ] [  ]              [  ] [ ⌨ ABC ] [ 󰖩 192.168.0.2 ] [ 🔉 44% ] [ 🔋 87% ] [ 🕐 Sat 06 Sep 00:14:22 ]
 ```
+
+Workspace pills are built per monitor and labelled from whichever workspace is
+visible there, read from AeroSpace at paint time. No workspace is named anywhere in
+the config, so this works unchanged whatever you call them.
 
 ## Install
 
