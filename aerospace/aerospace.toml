@@ -108,14 +108,14 @@ key-mapping.preset = 'qwerty'
 #                 See:
 #                 https://nikitabobko.github.io/AeroSpace/guide#assign-workspaces-to-monitors
 gaps.inner.horizontal = 8
-gaps.inner.vertical =   8
-gaps.outer.left =       8
-gaps.outer.bottom =     8
-# 32 (SketchyBar height) + 8 gap. The macOS menu bar is set to auto-hide
+gaps.inner.vertical =   0
+gaps.outer.left =       4
+gaps.outer.bottom =     4
+# 32 (SketchyBar height) + 4 gap. The macOS menu bar is set to auto-hide
 # (_HIHideMenuBar = 1), so AeroSpace would otherwise tile windows underneath
 # the bar. Change this if you change the bar height in sketchybarrc.
-gaps.outer.top =        40
-gaps.outer.right =      8
+gaps.outer.top =        36
+gaps.outer.right =      4
 
 # 'main' binding mode declaration
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
