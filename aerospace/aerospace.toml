@@ -111,10 +111,27 @@ gaps.inner.horizontal = 8
 gaps.inner.vertical =   0
 gaps.outer.left =       4
 gaps.outer.bottom =     4
-# 32 (SketchyBar height) + 4 gap. The macOS menu bar is set to auto-hide
-# (_HIHideMenuBar = 1), so AeroSpace would otherwise tile windows underneath
-# the bar. Change this if you change the bar height in sketchybarrc.
-gaps.outer.top =        36
+# The top gap has to be per-monitor because only some displays reserve space at
+# the top themselves. Measured via NSScreen frame vs visibleFrame:
+#
+#   Built-in Retina  frame h=982  visibleFrame h=950  -> 32pt already reserved
+#   PHL 272E2F       frame h=1080 visibleFrame h=1080 -> 0pt reserved
+#
+# The built-in has a notch, so macOS keeps a 32pt safe area that AeroSpace
+# already excludes, and SketchyBar draws its 32pt bar inside exactly that strip.
+# It therefore needs the plain gap only. The external display reserves nothing
+# (the macOS menu bar is set to auto-hide, _HIHideMenuBar = 1), so there the gap
+# must also cover the bar: 32 (bar height) + 4.
+#
+# A flat value cannot satisfy both — 36 everywhere leaves the built-in with
+# 32 + 36 = 68pt of dead space above the topmost window.
+#
+# Re-measure with:
+#   osascript -l JavaScript -e 'ObjC.import("AppKit"); var s=$.NSScreen.screens;
+#     var o=[]; for (var i=0;i<s.count;i++){var c=s.objectAtIndex(i);
+#     o.push(ObjC.unwrap(c.localizedName)+" "+JSON.stringify(
+#     [ObjC.deepUnwrap(c.frame),ObjC.deepUnwrap(c.visibleFrame)]));} o.join("\n")'
+gaps.outer.top = [{ monitor."built-in" = 4 }, 36]
 gaps.outer.right =      4
 
 # 'main' binding mode declaration
