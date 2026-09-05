@@ -186,12 +186,30 @@ gaps.outer.right =      4
     alt-minus = 'resize smart -50'
     alt-equal = 'resize smart +50'
 
+    # Switch "tabs" — focus the Nth window of the focused workspace, matching the
+    # left-to-right order of the window icons in SketchyBar. alt-0 is the 10th,
+    # which is MAX_WINDOW_SLOTS in the SketchyBar config.
+    #
+    # AeroSpace has no native focus-by-position command, hence the helper script.
+    # `bash -c` is needed because exec-and-forget does not expand $HOME.
+    alt-1 = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/focus-window.sh 1"'
+    alt-2 = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/focus-window.sh 2"'
+    alt-3 = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/focus-window.sh 3"'
+    alt-4 = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/focus-window.sh 4"'
+    alt-5 = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/focus-window.sh 5"'
+    alt-6 = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/focus-window.sh 6"'
+    alt-7 = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/focus-window.sh 7"'
+    alt-8 = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/focus-window.sh 8"'
+    alt-9 = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/focus-window.sh 9"'
+    alt-0 = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/focus-window.sh 10"'
+
     # See: https://nikitabobko.github.io/AeroSpace/commands#workspace
-    # Named workspaces, bound in the order they appear in persistent-workspaces.
-    alt-1 = 'workspace home'
-    alt-2 = 'workspace personal'
-    alt-3 = 'workspace psa'
-    alt-4 = 'workspace upma'
+    # Workspace switching moved off alt-N to make room for the bindings above.
+    # Named workspaces, in the order they appear in persistent-workspaces.
+    ctrl-alt-1 = 'workspace home'
+    ctrl-alt-2 = 'workspace personal'
+    ctrl-alt-3 = 'workspace psa'
+    ctrl-alt-4 = 'workspace upma'
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#move-node-to-workspace
     alt-shift-1 = 'move-node-to-workspace home'
