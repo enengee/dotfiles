@@ -13,27 +13,48 @@
 # uses, and it is *not* AeroSpace's own %{monitor-id}: on this machine the
 # built-in display is monitor-id 2 but appkit/SketchyBar display 1.
 #
+# Groups are created for display ids 1..MAX_DISPLAYS, not for the monitors that
+# happen to be attached right now. The bar draws the left region in item
+# *creation* order, so anything that creates items again later can reorder it —
+# and a plug or unplug fires a burst of events, so a rebuild triggered from the
+# repaint path can end up running twice concurrently, interleaving two sets of
+# `--add` calls and scrambling the order for the rest of the session. Creating
+# every group up front, once, removes that whole class of failure: ids above the
+# attached monitor count are bound to a display that does not exist and simply
+# never draw, and they start drawing in the right place when it appears.
+#
 # Window slots are pre-created and hidden rather than added and removed on
-# every event: creating items at runtime is slow and makes the bar flicker.
-# MAX_WINDOW_SLOTS caps how many fit; the last slot becomes a "+N" overflow
-# marker when a workspace holds more windows than that.
+# every event, for the same reason plus a practical one: creating items at
+# runtime is slow and makes the bar flicker. MAX_WINDOW_SLOTS caps how many fit;
+# a separate "+N" item marks the windows that did not fit.
+#
+# Everything below is a single `sketchybar` invocation. Each one costs a process
+# spawn, and this creates MAX_DISPLAYS * (MAX_WINDOW_SLOTS + 2) items.
 
-# Custom events fired from aerospace.toml.
-sketchybar --add event aerospace_workspace_change
-sketchybar --add event aerospace_focus_change
-sketchybar --add event aerospace_mode_change
+args=(
+  # Custom events fired from aerospace.toml.
+  --add event aerospace_workspace_change
+  --add event aerospace_focus_change
+  --add event aerospace_mode_change
+)
 
-for display in $(aerospace list-monitors --format '%{monitor-appkit-nsscreen-screens-id}'); do
-  sketchybar --add item "workspace.$display" left \
-    --set "workspace.$display" \
-    display="$display" \
-    background.drawing=on \
-    background.color="$WS_UNFOCUSED_BG" \
-    icon="$ICON_WORKSPACE" \
-    icon.font="$TEXT_FONT:Bold:13.0" \
-    icon.color="$WS_UNFOCUSED_FG" \
-    label.font="$TEXT_FONT:Bold:13.0" \
+for display in $(seq 1 "$MAX_DISPLAYS"); do
+  # drawing=off until the repaint path finds a workspace visible on this
+  # display, so a group for a monitor that is not attached stays blank even if
+  # SketchyBar is asked to draw it.
+  args+=(
+    --add item "workspace.$display" left
+    --set "workspace.$display"
+    display="$display"
+    drawing=off
+    background.drawing=on
+    background.color="$WS_UNFOCUSED_BG"
+    icon="$ICON_WORKSPACE"
+    icon.font="$TEXT_FONT:Bold:13.0"
+    icon.color="$WS_UNFOCUSED_FG"
+    label.font="$TEXT_FONT:Bold:13.0"
     label.color="$WS_UNFOCUSED_FG"
+  )
 
   # Icon-only window items: no label is ever set on these, so window titles
   # never appear and there is nothing that needs polling to stay fresh.
@@ -42,33 +63,37 @@ for display in $(aerospace list-monitors --format '%{monitor-appkit-nsscreen-scr
   # change, and each property it sends costs bash string work in a 3.2 shell,
   # so constants belong at creation time.
   for i in $(seq 1 "$MAX_WINDOW_SLOTS"); do
-    sketchybar --add item "window.$display.$i" left \
-      --set "window.$display.$i" \
-      display="$display" \
-      drawing=off \
-      background.drawing=on \
-      background.color="$WIN_INACTIVE_BG" \
-      icon.font="$APP_FONT:Regular:15.0" \
-      icon.color="$WIN_INACTIVE_FG" \
-      icon.padding_left=8 \
-      icon.padding_right=8 \
+    args+=(
+      --add item "window.$display.$i" left
+      --set "window.$display.$i"
+      display="$display"
+      drawing=off
+      background.drawing=on
+      background.color="$WIN_INACTIVE_BG"
+      icon.font="$APP_FONT:Regular:15.0"
+      icon.color="$WIN_INACTIVE_FG"
+      icon.padding_left=8
+      icon.padding_right=8
       label.drawing=off
+    )
   done
 
   # "+N" marker for windows beyond MAX_WINDOW_SLOTS. Its own item rather than
   # the last window slot, so no slot ever has to switch between the app font and
   # the text font at repaint time.
-  sketchybar --add item "overflow.$display" left \
-    --set "overflow.$display" \
-    display="$display" \
-    drawing=off \
-    background.drawing=on \
-    background.color="$WIN_INACTIVE_BG" \
-    icon="$ICON_OVERFLOW" \
-    icon.font="$TEXT_FONT:Bold:11.0" \
-    icon.color="$WIN_INACTIVE_FG" \
-    label.font="$TEXT_FONT:Bold:11.0" \
+  args+=(
+    --add item "overflow.$display" left
+    --set "overflow.$display"
+    display="$display"
+    drawing=off
+    background.drawing=on
+    background.color="$WIN_INACTIVE_BG"
+    icon="$ICON_OVERFLOW"
+    icon.font="$TEXT_FONT:Bold:11.0"
+    icon.color="$WIN_INACTIVE_FG"
+    label.font="$TEXT_FONT:Bold:11.0"
     label.color="$WIN_INACTIVE_FG"
+  )
 done
 
 # One invisible item drives every workspace pill and window slot from a single
@@ -76,17 +101,21 @@ done
 #
 # No update_freq: this is purely event-driven. Window titles were the only thing
 # that needed polling, and they are no longer displayed.
-sketchybar --add item window_watcher left \
-  --set window_watcher \
-  drawing=off \
-  updates=on \
-  update_freq=0 \
-  script="$PLUGIN_DIR/workspace.sh" \
-  --subscribe window_watcher \
-  aerospace_workspace_change \
-  aerospace_focus_change \
-  aerospace_mode_change \
-  front_app_switched \
-  space_windows_change \
-  display_change \
+args+=(
+  --add item window_watcher left
+  --set window_watcher
+  drawing=off
+  updates=on
+  update_freq=0
+  script="$PLUGIN_DIR/workspace.sh"
+  --subscribe window_watcher
+  aerospace_workspace_change
+  aerospace_focus_change
+  aerospace_mode_change
+  front_app_switched
+  space_windows_change
+  display_change
   system_woke
+)
+
+sketchybar "${args[@]}"

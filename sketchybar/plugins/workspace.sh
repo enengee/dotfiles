@@ -14,8 +14,13 @@
 #   * Two AeroSpace reads, not four: `list-workspaces --all` reports the
 #     visible *and* focused flags together, and the binding mode is cached.
 #   * Per-item diffing against the previous run, cached in $STATE_FILE. Without
-#     it every event would rewrite all ~22 items and SketchyBar would visibly
+#     it every event would rewrite all ~44 items and SketchyBar would visibly
 #     re-layout the whole bar; a focus change alters two or three items.
+#
+# It only ever *sets* items — the item set itself is fixed, created once by
+# items/workspace.sh for display ids 1..MAX_DISPLAYS. Plugging or unplugging a
+# monitor is therefore an ordinary repaint here, with nothing to add, remove or
+# reload; see the note in items/workspace.sh for why that matters.
 #
 # `#!/bin/bash` rather than `#!/usr/bin/env bash` deliberately: it saves an exec
 # on a hot path, and /bin/bash on macOS is 3.2, so the 3.2-only constraints above
@@ -109,31 +114,64 @@ push_item() {
   flat+=(--set "$name" "$@")
 }
 
-displays=""
+# Display groups are walked in ascending id order, and every group is emitted on
+# every run — including the ones with no monitor behind them. Two reasons:
+#
+#   * The diff below is positional, so the emit order has to be the same on
+#     every run or it reports changes that are not there. AeroSpace lists
+#     workspaces by name, so driving the loop off its output would reorder the
+#     items whenever the visible workspace names sorted differently.
+#   * A group whose monitor is gone has to be blanked, not skipped. Its items
+#     keep whatever was last painted, and that stale content would flash back
+#     onto the bar the moment the display id exists again.
+#
+# Emitting the hidden groups is close to free: their signatures do not change
+# between runs, so the diff sends nothing.
+display=0
+while [ "$display" -lt "$MAX_DISPLAYS" ]; do
+  display=$((display + 1))
 
-for line in "${workspace_lines[@]}"; do
-  # display|workspace|is-visible|is-focused
-  display=${line%%|*}
-  rest=${line#*|}
-  workspace=${rest%%|*}
-  rest=${rest#*|}
-  is_visible=${rest%%|*}
-  is_focused=${rest#*|}
+  # The workspace visible on this display, if any. A monitor showing an *empty*
+  # workspace still needs its name drawn, which is why this comes from the
+  # workspace list rather than being derived from the window list.
+  workspace="" is_focused="false" has_monitor=0
+  for line in "${workspace_lines[@]}"; do
+    # display|workspace|is-visible|is-focused
+    [ "${line%%|*}" = "$display" ] || continue
+    rest=${line#*|}
+    candidate=${rest%%|*}
+    rest=${rest#*|}
+    [ "${rest%%|*}" = "true" ] || continue
+    workspace=$candidate
+    is_focused=${rest#*|}
+    has_monitor=1
+    break
+  done
 
-  [ "$is_visible" = "true" ] || continue
-  if [ -z "$displays" ]; then displays=$display; else displays="$displays $display"; fi
+  if [ "$has_monitor" = "0" ]; then
+    push_item "workspace.$display" drawing=off label=""
+    slot=0
+    while [ "$slot" -lt "$MAX_WINDOW_SLOTS" ]; do
+      slot=$((slot + 1))
+      push_item "window.$display.$slot" drawing=off icon="" click_script=""
+    done
+    push_item "overflow.$display" drawing=off label=""
+    continue
+  fi
 
   # Accent the pill on the monitor that has focus; dim the other one. The mode
   # indicator goes on the focused pill only, since the mode is global and that
   # is where you are looking.
   if [ "$is_focused" = "true" ]; then
     push_item "workspace.$display" \
+      drawing=on \
       label="$workspace$mode_suffix" \
       background.color="$WS_FOCUSED_BG" \
       icon.color="$WS_FOCUSED_FG" \
       label.color="$WS_FOCUSED_FG"
   else
     push_item "workspace.$display" \
+      drawing=on \
       label="$workspace" \
       background.color="$WS_UNFOCUSED_BG" \
       icon.color="$WS_UNFOCUSED_FG" \
@@ -184,48 +222,6 @@ for line in "${workspace_lines[@]}"; do
     push_item "overflow.$display" drawing=off label=""
   fi
 done
-
-# --- monitors added or removed ------------------------------------------------
-# Displays are enumerated when the config loads, so a plug or unplug needs the
-# items rebuilt rather than repainted.
-#
-# Do NOT hang this off SENDER=display_change: that event fires whenever the
-# *active* display changes, so reloading on it rebuilds the whole bar every time
-# focus moves to the other monitor.
-#
-# Compared as a set, not as a string, so a change in the order AeroSpace happens
-# to list monitors in cannot trigger a pointless rebuild. The new value is
-# written before the comparison, so the paint after a reload sees it as unchanged
-# and cannot loop.
-#
-# Both sides are re-padded with spaces before the membership tests: `read` strips
-# leading and trailing IFS whitespace, so padding written to the file does not
-# survive being read back, and comparing unpadded would report a change every
-# single run — which reloads the bar in a loop and empties it.
-previous_displays=""
-[ -f "$DISPLAY_STATE_FILE" ] && read -r previous_displays <"$DISPLAY_STATE_FILE"
-printf '%s\n' "$displays" >"$DISPLAY_STATE_FILE"
-
-if [ -n "$previous_displays" ]; then
-  displays_changed=0
-  for display in $displays; do
-    case " $previous_displays " in
-    *" $display "*) ;;
-    *) displays_changed=1 ;;
-    esac
-  done
-  for display in $previous_displays; do
-    case " $displays " in
-    *" $display "*) ;;
-    *) displays_changed=1 ;;
-    esac
-  done
-
-  if [ "$displays_changed" = "1" ]; then
-    rm -f "$STATE_FILE"
-    exec sketchybar --reload
-  fi
-fi
 
 # --- diff against the previous run -------------------------------------------
 previous_names=() previous_sigs=()

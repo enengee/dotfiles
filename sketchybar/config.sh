@@ -17,12 +17,21 @@ export APP_FONT="sketchybar-app-font"
 # overflow marker when a workspace holds more windows than this.
 export MAX_WINDOW_SLOTS=10
 
+# How many monitors to pre-create item groups for. Groups are keyed by
+# AeroSpace's %{monitor-appkit-nsscreen-screens-id}, which is always 1..N, so
+# ids above the number of attached monitors just never draw.
+#
+# This is a fixed count rather than the live monitor count on purpose: the bar
+# orders items by creation order, so creating them once at config load is what
+# keeps the left side in a stable order across plugging and unplugging a
+# monitor. Raise it if you ever attach more than this many displays — the extra
+# monitor's bar would otherwise have an empty left side.
+export MAX_DISPLAYS=4
+
 # Where plugins/workspace.sh caches the last painted state, so it can send only
-# the items that actually changed, the set of displays it built items for, and
-# the current AeroSpace binding mode.
+# the items that actually changed, and the current AeroSpace binding mode.
 export STATE_FILE="${TMPDIR:-/tmp}/sketchybar-workspace.state"
 export INPUT_STATE_FILE="${TMPDIR:-/tmp}/sketchybar-inputs.state"
-export DISPLAY_STATE_FILE="${TMPDIR:-/tmp}/sketchybar-displays.state"
 export MODE_STATE_FILE="${TMPDIR:-/tmp}/sketchybar-mode.state"
 
 # PID of the `caffeinate` process the caffeine item owns, when it is on.

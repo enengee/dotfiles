@@ -108,11 +108,22 @@ One hidden item (`window_watcher`) repaints every workspace pill and window slot
 from a single script run, diffing against a cached state file so an event touches
 only the items that changed. Rewriting all of them made the bar visibly re-layout.
 
+Items are never created or destroyed after startup. The bar draws the left region
+in item *creation* order, so a group of items is created up front for each display
+id 1..`MAX_DISPLAYS` (`config.sh`), and ids with no monitor behind them are bound
+to a display that does not exist and simply do not draw. Plugging or unplugging a
+monitor is then an ordinary repaint. Rebuilding the items on a display change
+instead is what used to scramble the tab order: a plug fires a burst of events, so
+two rebuilds could run at once and interleave their `--add` calls.
+
 Window items are icon-only by design. Titles were dropped because nothing emits an
 event when a title changes, so showing them required a poll.
 
 ## Known limitations
 
+- **More than `MAX_DISPLAYS` monitors show an empty left side.** Item groups are
+  pre-created for that many display ids; raise it in `config.sh` if you attach
+  more.
 - **Wi-Fi shows the IP, not the SSID.** Since macOS 14 the network name requires
   Location Services authorization for the calling process, which a script
   SketchyBar spawns cannot get. `ipconfig`, `system_profiler` and `networksetup`
