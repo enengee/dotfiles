@@ -205,33 +205,46 @@ gaps.outer.right =      4
     alt-9 = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/focus-window.sh 9"'
     alt-0 = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/focus-window.sh 10"'
 
+    # Workspaces are reached by cycling with alt-tab, below — there are no
+    # per-workspace bindings, so nothing here names a workspace or assumes how
+    # many exist.
+    # Cycle *every* workspace, cmd-tab style: each press moves to the next one and
+    # the last wraps back to the first, so repeated presses go round in a circle.
+    # The circle spans both monitors — landing on a workspace that lives on the
+    # other screen moves focus to that screen.
+    #
+    # This has to be a pipe, and therefore a shell, because `workspace next` on its
+    # own is monitor-scoped: without --stdin its list is "all workspaces (even
+    # empty ones) on focused monitor in alphabetical order", so a workspace parked
+    # on the other display is unreachable. --stdin replaces that list, and
+    # `list-workspaces --all` supplies every workspace there is, still in
+    # alphabetical order. --wrap-around closes the circle; without it the last
+    # workspace is a dead end.
+    #
+    # `--all` rather than `--monitor all --empty no`: it is the one filter that
+    # always contains the *focused* workspace, including when that workspace is
+    # empty. Feeding a list the current workspace is absent from leaves `next`
+    # with no position to advance from. It costs nothing here, since AeroSpace
+    # destroys empty workspaces as soon as they lose visibility, so there are no
+    # phantom entries to cycle through.
+    #
+    # Focus moves to the workspace's own screen rather than the workspace being
+    # dragged onto the focused one. Pulling it over is possible — move it with
+    # `move-workspace-to-monitor --workspace <ws> <focused monitor>` before
+    # focusing it — but it reads badly in practice: whichever screen you tab from
+    # slowly collects every workspace, and the screen a workspace is taken from is
+    # left showing a throwaway empty workspace that AeroSpace creates to fill it.
+    #
+    # PATH is set explicitly for the same reason as the sketchybar bindings below:
+    # exec-and-forget inherits the GUI app's environment, which does not have
+    # Homebrew's bin on PATH.
+    #
+    # Unlike cmd-tab this is positional, not most-recently-used: a binding cannot
+    # observe the modifier being released, so there is no keypress to end a
+    # "session" and commit an MRU reorder.
+    #
     # See: https://nikitabobko.github.io/AeroSpace/commands#workspace
-    # Numbered rather than named: AeroSpace creates a workspace on demand, so
-    # numbers carry no assumption about what this machine is used for and need no
-    # persistent-workspaces entry.
-    ctrl-alt-1 = 'workspace 1'
-    ctrl-alt-2 = 'workspace 2'
-    ctrl-alt-3 = 'workspace 3'
-    ctrl-alt-4 = 'workspace 4'
-    ctrl-alt-5 = 'workspace 5'
-    ctrl-alt-6 = 'workspace 6'
-    ctrl-alt-7 = 'workspace 7'
-    ctrl-alt-8 = 'workspace 8'
-    ctrl-alt-9 = 'workspace 9'
-
-    # See: https://nikitabobko.github.io/AeroSpace/commands#move-node-to-workspace
-    alt-shift-1 = 'move-node-to-workspace 1'
-    alt-shift-2 = 'move-node-to-workspace 2'
-    alt-shift-3 = 'move-node-to-workspace 3'
-    alt-shift-4 = 'move-node-to-workspace 4'
-    alt-shift-5 = 'move-node-to-workspace 5'
-    alt-shift-6 = 'move-node-to-workspace 6'
-    alt-shift-7 = 'move-node-to-workspace 7'
-    alt-shift-8 = 'move-node-to-workspace 8'
-    alt-shift-9 = 'move-node-to-workspace 9'
-
-    # See: https://nikitabobko.github.io/AeroSpace/commands#workspace-back-and-forth
-    alt-tab = 'workspace-back-and-forth'
+    alt-tab = 'exec-and-forget /bin/bash -c "PATH=/opt/homebrew/bin:/usr/local/bin:$PATH; aerospace list-workspaces --all | aerospace workspace --wrap-around --stdin next"'
     # See: https://nikitabobko.github.io/AeroSpace/commands#move-workspace-to-monitor
     alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
 

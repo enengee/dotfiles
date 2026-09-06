@@ -57,10 +57,17 @@ externals start reserving ~24pt themselves, making 36 too much.
 
 ### Workspace names
 
-Workspaces are numbered (`ctrl-alt-1` … `ctrl-alt-9`) and `persistent-workspaces`
-is empty, so nothing about the workspace set is baked into the config — AeroSpace
-creates a workspace when you first switch to it and drops it when it empties. Name
-them in `aerospace.toml` if you prefer, but then each machine needs its own set.
+No binding names a workspace, and `persistent-workspaces` is empty, so nothing
+about the workspace set is baked into the config — AeroSpace creates a workspace
+on demand and drops it when it empties. `alt-tab` cycles whatever exists, in
+alphabetical order, across every monitor: landing on a workspace that lives on
+another screen moves focus to that screen.
+
+The flip side is that nothing can address a workspace by name, so there is no
+binding that creates one or moves a window to one. If you want either, add a
+`workspace <name>` or `move-node-to-workspace <name>` binding, and list the names
+in `persistent-workspaces` if they should survive going empty — at which point the
+set of names becomes machine-specific.
 
 ### Floating applications
 
@@ -88,9 +95,7 @@ for a font whose weights you have.
 | `alt-1` … `alt-9`, `alt-0` | Focus the Nth window of the workspace, matching the bar's icon order |
 | `alt-h/j/k/l` | Focus left / down / up / right |
 | `alt-shift-h/j/k/l` | Move window |
-| `ctrl-alt-1` … `ctrl-alt-9` | Switch workspace |
-| `alt-shift-1` … `alt-shift-9` | Move window to workspace |
-| `alt-tab` | Previous workspace |
+| `alt-tab` | Next workspace, wrapping round — spans all monitors |
 | `alt-shift-tab` | Move workspace to next monitor |
 | `alt-f` | Fullscreen |
 | `alt-minus` / `alt-equal` | Resize |
