@@ -29,13 +29,18 @@
 # a separate "+N" item marks the windows that did not fit.
 #
 # Everything below is a single `sketchybar` invocation. Each one costs a process
-# spawn, and this creates MAX_DISPLAYS * (MAX_WINDOW_SLOTS + 2) items.
+# spawn, and this creates MAX_DISPLAYS * (MAX_WINDOW_SLOTS + MAX_SWITCHER_SLOTS + 2)
+# items.
 
 args=(
   # Custom events fired from aerospace.toml.
   --add event aerospace_workspace_change
   --add event aerospace_focus_change
   --add event aerospace_mode_change
+  # Fired by the alt-tab script: raise the workspace switcher HUD, and take it
+  # down again once tabbing stops.
+  --add event aerospace_switcher_open
+  --add event aerospace_switcher_close
 )
 
 for display in $(seq 1 "$MAX_DISPLAYS"); do
@@ -78,9 +83,34 @@ for display in $(seq 1 "$MAX_DISPLAYS"); do
     )
   done
 
-  # "+N" marker for windows beyond MAX_WINDOW_SLOTS. Its own item rather than
-  # the last window slot, so no slot ever has to switch between the app font and
-  # the text font at repaint time.
+  # Workspace tabs for the alt-tab switcher HUD, which replaces the window pills
+  # while cycling. Created *between* the window slots and the overflow marker on
+  # purpose: hidden items take no space, so that one order reads correctly in both
+  # modes — pill, windows, "+N" normally, and pill, workspaces, "+N" with the HUD
+  # up — and the marker can count the overflow of whichever list is showing.
+  #
+  # Text font, not the app font: these carry workspace names, and no slot ever has
+  # to switch fonts at repaint time.
+  for i in $(seq 1 "$MAX_SWITCHER_SLOTS"); do
+    args+=(
+      --add item "switcher.$display.$i" left
+      --set "switcher.$display.$i"
+      display="$display"
+      drawing=off
+      background.drawing=on
+      background.color="$SWITCHER_OTHER_BG"
+      icon.drawing=off
+      label.font="$TEXT_FONT:Bold:13.0"
+      label.color="$SWITCHER_OTHER_FG"
+      label.padding_left=8
+      label.padding_right=8
+    )
+  done
+
+  # "+N" marker for whatever did not fit — window pills normally, workspace tabs
+  # while the switcher HUD is up. Its own item rather than the last slot of either
+  # list, so no slot ever has to switch between the app font and the text font at
+  # repaint time.
   args+=(
     --add item "overflow.$display" left
     --set "overflow.$display"
@@ -112,6 +142,8 @@ args+=(
   aerospace_workspace_change
   aerospace_focus_change
   aerospace_mode_change
+  aerospace_switcher_open
+  aerospace_switcher_close
   front_app_switched
   space_windows_change
   display_change

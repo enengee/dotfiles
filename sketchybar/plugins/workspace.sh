@@ -83,6 +83,15 @@ if [ -n "$mode" ] && [ "$mode" != "main" ]; then
   mode_suffix=" ($(printf '%s' "${mode:0:1}" | tr '[:lower:]' '[:upper:]'))"
 fi
 
+# --- switcher HUD state ------------------------------------------------------
+# Read, never written here: the alt-tab script owns this flag and sets it before
+# it changes workspace, so that every repaint the switch provokes — including the
+# ones this script is running concurrently for other events — agrees on whether
+# the HUD is up. Deriving it from SENDER instead would make the answer depend on
+# which of those runs finished last.
+switcher=""
+[ -f "$SWITCHER_STATE_FILE" ] && read -r switcher <"$SWITCHER_STATE_FILE" 2>/dev/null
+
 # --- nothing to do? -----------------------------------------------------------
 # Several subscribed events fire without changing anything the bar shows —
 # front_app_switched in particular. Comparing the raw AeroSpace output lets those
@@ -90,7 +99,8 @@ fi
 inputs="$workspace_rows
 $window_rows
 $focused_window
-$mode"
+$mode
+$switcher"
 
 previous_inputs=""
 [ -f "$INPUT_STATE_FILE" ] && previous_inputs=$(<"$INPUT_STATE_FILE")
@@ -112,6 +122,23 @@ push_item() {
   offsets+=("${#flat[@]}")
   lengths+=("$(($# + 2))")
   flat+=(--set "$name" "$@")
+}
+
+# Blanking a whole list is needed from two places each, so both are functions.
+hide_window_slots() {
+  local slot=0
+  while [ "$slot" -lt "$MAX_WINDOW_SLOTS" ]; do
+    slot=$((slot + 1))
+    push_item "window.$1.$slot" drawing=off icon="" click_script=""
+  done
+}
+
+hide_switcher_slots() {
+  local slot=0
+  while [ "$slot" -lt "$MAX_SWITCHER_SLOTS" ]; do
+    slot=$((slot + 1))
+    push_item "switcher.$1.$slot" drawing=off label="" click_script=""
+  done
 }
 
 # Display groups are walked in ascending id order, and every group is emitted on
@@ -150,11 +177,8 @@ while [ "$display" -lt "$MAX_DISPLAYS" ]; do
 
   if [ "$has_monitor" = "0" ]; then
     push_item "workspace.$display" drawing=off label=""
-    slot=0
-    while [ "$slot" -lt "$MAX_WINDOW_SLOTS" ]; do
-      slot=$((slot + 1))
-      push_item "window.$display.$slot" drawing=off icon="" click_script=""
-    done
+    hide_window_slots "$display"
+    hide_switcher_slots "$display"
     push_item "overflow.$display" drawing=off label=""
     continue
   fi
@@ -176,6 +200,54 @@ while [ "$display" -lt "$MAX_DISPLAYS" ]; do
       background.color="$WS_UNFOCUSED_BG" \
       icon.color="$WS_UNFOCUSED_FG" \
       label.color="$WS_UNFOCUSED_FG"
+  fi
+
+  # With the switcher HUD up, this monitor's window pills give way to a tab per
+  # workspace — the whole alt-tab ring, in the order alt-tab walks it, with the
+  # one you have landed on accented. Only the focused monitor swaps: the other
+  # screen's bar is not what you are looking at while switching.
+  if [ "$switcher" = "on" ] && [ "$is_focused" = "true" ]; then
+    hide_window_slots "$display"
+
+    slot=0
+    for ring_line in "${workspace_lines[@]}"; do
+      [ "$slot" -lt "$MAX_SWITCHER_SLOTS" ] || break
+      slot=$((slot + 1))
+
+      # display|workspace|is-visible|is-focused — only the name and the focused
+      # flag matter here; the ring spans every monitor.
+      rest=${ring_line#*|}
+      ring_name=${rest%%|*}
+      rest=${rest#*|}
+
+      if [ "${rest#*|}" = "true" ]; then
+        background=$SWITCHER_CURRENT_BG foreground=$SWITCHER_CURRENT_FG
+      else
+        background=$SWITCHER_OTHER_BG foreground=$SWITCHER_OTHER_FG
+      fi
+
+      push_item "switcher.$display.$slot" \
+        drawing=on \
+        background.color="$background" \
+        label="$ring_name" \
+        label.color="$foreground" \
+        click_script="aerospace workspace '$ring_name'"
+    done
+
+    hidden=$slot
+    while [ "$hidden" -lt "$MAX_SWITCHER_SLOTS" ]; do
+      hidden=$((hidden + 1))
+      push_item "switcher.$display.$hidden" drawing=off label="" click_script=""
+    done
+
+    ring_total=${#workspace_lines[@]}
+    if [ "$ring_total" -gt "$MAX_SWITCHER_SLOTS" ]; then
+      push_item "overflow.$display" drawing=on label="$((ring_total - MAX_SWITCHER_SLOTS))"
+    else
+      push_item "overflow.$display" drawing=off label=""
+    fi
+
+    continue
   fi
 
   # Windows in this workspace, in AeroSpace's order. Counted first so the
@@ -215,6 +287,7 @@ while [ "$display" -lt "$MAX_DISPLAYS" ]; do
     slot=$((slot + 1))
     push_item "window.$display.$slot" drawing=off icon="" click_script=""
   done
+  hide_switcher_slots "$display"
 
   if [ "$total" -gt "$MAX_WINDOW_SLOTS" ]; then
     push_item "overflow.$display" drawing=on label="$((total - MAX_WINDOW_SLOTS))"

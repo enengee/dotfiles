@@ -42,3 +42,9 @@ export WIN_FOCUSED_BG=$SURFACE2   # the window that currently has focus
 export WIN_FOCUSED_FG=$TEXT
 export WIN_INACTIVE_BG=$SURFACE0
 export WIN_INACTIVE_FG=$SUBTEXT0
+
+# Workspace switcher HUD (replaces the window pills while alt-tab cycles)
+export SWITCHER_CURRENT_BG=$MAUVE # where alt-tab has landed
+export SWITCHER_CURRENT_FG=$CRUST
+export SWITCHER_OTHER_BG=$SURFACE0
+export SWITCHER_OTHER_FG=$SUBTEXT0
