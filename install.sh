@@ -78,7 +78,7 @@ link "$REPO/aerospace/scripts" "$HOME/.config/aerospace/scripts"
 # path so the Input Monitoring grant survives reinstalls; loaded via launchd.
 HELPER_SRC="$REPO/aerospace/helper/alt-release-watcher.swift"
 HELPER_BIN="$HOME/.local/bin/alt-release-watcher"
-COMMIT_SCRIPT="$HOME/.config/aerospace/scripts/commit-workspace.sh"
+COMMIT_SCRIPT="$HOME/.config/aerospace/scripts/commit-switch.sh"
 AGENT_LABEL="com.local.aerospace.alt-release-watcher"
 AGENT_DEST="$HOME/Library/LaunchAgents/$AGENT_LABEL.plist"
 HELPER_LOG="$HOME/.cache/sketchybar/alt-release-watcher.log"

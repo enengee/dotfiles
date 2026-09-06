@@ -53,9 +53,9 @@ The grant is bound to the binary's path, so `install.sh` compiles to a stable
   `install.sh` fills in the binary, commit-script and log paths and loads it into
   the GUI session. `RunAtLoad` + `KeepAlive` keep it running from login onward.
 
-The commit itself lives in `../scripts/commit-workspace.sh`, passed to the helper
-as `COMMIT_SCRIPT`, so the binary knows nothing about workspaces or the repo
-layout.
+The commit itself lives in `../scripts/commit-switch.sh` (which dispatches to the
+workspace and window commit scripts), passed to the helper as `COMMIT_SCRIPT`, so
+the binary knows nothing about workspaces, windows, or the repo layout.
 
 ## Checking on it
 

@@ -233,8 +233,12 @@ gaps.outer.right =      4
     #
     # See: https://nikitabobko.github.io/AeroSpace/commands#workspace
     alt-tab = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/switch-workspace.sh"'
-    # See: https://nikitabobko.github.io/AeroSpace/commands#move-workspace-to-monitor
-    alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
+    # alt-shift-tab: cycle the focused workspace's windows, exactly like alt-tab
+    # cycles workspaces. Each press moves the highlight among the window pills
+    # without changing focus; the switch commits when Option is released, via the
+    # same alt-release helper (see the alt-tab note above and aerospace/helper).
+    # With zero or one window in the workspace it does nothing.
+    alt-shift-tab = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/switch-window.sh"'
 
     # Reload SketchyBar (picks up config edits without restarting the service)
     alt-shift-r = 'exec-and-forget /bin/bash -c "PATH=/opt/homebrew/bin:/usr/local/bin:$PATH sketchybar --reload"'

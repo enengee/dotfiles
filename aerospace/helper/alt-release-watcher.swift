@@ -1,11 +1,11 @@
 // alt-release-watcher — fire a command when the Option (alt) key is released.
 //
-// The alt-tab workspace switcher wants cmd-tab semantics: cycle a highlight
-// while alt is held, commit to the highlighted workspace the instant alt comes
-// up. Nothing in AeroSpace or SketchyBar can see a modifier being released —
-// AeroSpace's events are press-only and SketchyBar cannot read modifiers at all
-// — so that one signal has to come from AppKit, which is why this tiny helper
-// exists rather than living in the shell scripts with everything else.
+// The alt-tab / alt-shift-tab switchers want cmd-tab semantics: cycle a highlight
+// while alt is held, commit the moment alt comes up. Nothing in AeroSpace or
+// SketchyBar can see a modifier being released — AeroSpace's events are press-only
+// and SketchyBar cannot read modifiers at all — so that one signal has to come
+// from AppKit, which is why this tiny helper exists rather than living in the
+// shell scripts with everything else.
 //
 // It is a global NSEvent monitor on .flagsChanged, which is event-driven: the
 // process sleeps in the run loop until the OS delivers a modifier change. No
@@ -13,11 +13,11 @@
 // previous sample and, on a true->false transition, runs $COMMIT_SCRIPT.
 //
 // A global monitor sees events destined for other apps but cannot alter or
-// consume them, so this only observes; alt-tab is still handled entirely by
-// AeroSpace. Observing other apps' key events is exactly what macOS gates behind
-// Input Monitoring, so the binary needs that permission granted once (the launchd
-// agent triggers the prompt on first run). It reads modifier *flags* only, never
-// keycodes or characters.
+// consume them, so this only observes; the switchers are still handled entirely
+// by AeroSpace. Observing other apps' key events is exactly what macOS gates
+// behind Input Monitoring, so the binary needs that permission granted once (the
+// launchd agent triggers the prompt on first run). It reads modifier *flags*
+// only, never keycodes or characters.
 //
 // COMMIT_SCRIPT is passed in the environment by the launchd agent. Kept as one
 // explicit path rather than discovered, so the helper has no knowledge of the

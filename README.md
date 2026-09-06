@@ -96,7 +96,7 @@ for a font whose weights you have.
 | `alt-h/j/k/l` | Focus left / down / up / right |
 | `alt-shift-h/j/k/l` | Move window |
 | `alt-tab` | Cycle workspaces (spans all monitors); switches on Option release |
-| `alt-shift-tab` | Move workspace to next monitor |
+| `alt-shift-tab` | Cycle windows in the focused workspace; switches on Option release |
 | `alt-f` | Fullscreen |
 | `alt-minus` / `alt-equal` | Resize |
 | `alt-shift-;` | Service mode (`esc` exits, `f` toggles float, `r` resets layout) |
@@ -151,7 +151,20 @@ precisely because focus has deliberately not moved yet while you cycle. Both
 scripts and the paint script derive the ring from `aerospace list-workspaces
 --all`, so they agree on order while sharing only the integer index.
 
-The switcher's state files live in `~/.cache/sketchybar`, not `$TMPDIR` like the
+`alt-shift-tab` is the same mechanism for **windows**: it cycles the focused
+workspace's windows and commits focus on Option release. There is no separate HUD
+— the window pills already show one icon per window in AeroSpace order, so the
+switcher just moves which pill is accented, `scripts/switch-window.sh` advancing an
+index and `scripts/commit-window.sh` focusing the selected window. With zero or one
+window it does nothing. The ring is `aerospace list-windows --workspace focused`.
+
+Both switchers commit through the one alt-release helper: its `COMMIT_SCRIPT` is
+`scripts/commit-switch.sh`, which calls both commit scripts, and each is a no-op
+unless its own state flag is on. Only one switcher can be mid-burst at a time since
+both are held with Option, so they never collide — and that same flag check is what
+keeps an ordinary Option release (from `alt-h`, `alt-f`, …) from doing anything.
+
+The switchers' state files live in `~/.cache/sketchybar`, not `$TMPDIR` like the
 rest. They are the only state shared across process trees — written by children of
 AeroSpace and the launchd helper, read by a child of the SketchyBar daemon — and
 `${TMPDIR:-/tmp}` resolves per environment, so the sides silently picked different

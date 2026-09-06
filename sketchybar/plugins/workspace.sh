@@ -98,6 +98,15 @@ switcher_index=-1
 [ -f "$SWITCHER_INDEX_FILE" ] && read -r switcher_index <"$SWITCHER_INDEX_FILE" 2>/dev/null
 case "$switcher_index" in '' | *[!0-9-]*) switcher_index=-1 ;; esac
 
+# Window switcher (alt-shift-tab): same idea, cycling the focused workspace's
+# windows. When on, the window pills accent this selected index instead of the
+# genuinely focused window, since focus has not moved yet.
+winsw=""
+[ -f "$WINSW_STATE_FILE" ] && read -r winsw <"$WINSW_STATE_FILE" 2>/dev/null
+winsw_index=-1
+[ -f "$WINSW_INDEX_FILE" ] && read -r winsw_index <"$WINSW_INDEX_FILE" 2>/dev/null
+case "$winsw_index" in '' | *[!0-9-]*) winsw_index=-1 ;; esac
+
 # --- nothing to do? -----------------------------------------------------------
 # Several subscribed events fire without changing anything the bar shows —
 # front_app_switched in particular. Comparing the raw AeroSpace output lets those
@@ -107,7 +116,9 @@ $window_rows
 $focused_window
 $mode
 $switcher
-$switcher_index"
+$switcher_index
+$winsw
+$winsw_index"
 
 previous_inputs=""
 [ -f "$INPUT_STATE_FILE" ] && previous_inputs=$(<"$INPUT_STATE_FILE")
@@ -279,7 +290,17 @@ while [ "$display" -lt "$MAX_DISPLAYS" ]; do
 
     __icon_map "${apps[$index]}"
 
-    if [ "${ids[$index]}" = "$focused_window" ]; then
+    # Which pill is accented. Normally the genuinely focused window; but while the
+    # alt-shift-tab window switcher is up on this (focused) monitor, focus has not
+    # moved yet, so accent the *selected* index instead — the same
+    # highlight-then-commit-on-release model the workspace switcher uses.
+    if [ "$winsw" = "on" ] && [ "$is_focused" = "true" ]; then
+      if [ "$index" = "$winsw_index" ]; then
+        background=$WIN_FOCUSED_BG foreground=$WIN_FOCUSED_FG
+      else
+        background=$WIN_INACTIVE_BG foreground=$WIN_INACTIVE_FG
+      fi
+    elif [ "${ids[$index]}" = "$focused_window" ]; then
       background=$WIN_FOCUSED_BG foreground=$WIN_FOCUSED_FG
     else
       background=$WIN_INACTIVE_BG foreground=$WIN_INACTIVE_FG
