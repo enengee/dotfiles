@@ -37,6 +37,7 @@ sketchybar --add item clock right \
   \
   --add item wifi right \
   --set wifi "${status[@]}" \
+  label.drawing=off \
   script="$PLUGIN_DIR/wifi.sh" \
   --subscribe wifi wifi_change system_woke
 

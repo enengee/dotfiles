@@ -5,9 +5,17 @@ CONFIG_DIR="${CONFIG_DIR:-$HOME/.config/sketchybar}"
 source "$CONFIG_DIR/colors.sh"
 source "$CONFIG_DIR/icons.sh"
 
-# This shows the IP rather than the network name, because on current macOS a
-# script simply cannot read the SSID. Do not "fix" this by reaching for one of
-# the usual commands — all of them have been checked on macOS 26:
+# Icon-only: the colour carries the state, and there is no label.
+#
+#   red     Wi-Fi is powered off
+#   yellow  powered on but not usable — either not associated with a network, or
+#           associated with no address, which is what a failed DHCP lease looks
+#           like
+#   green   associated and holding an address
+#
+# There is deliberately no network name here, because on current macOS a script
+# simply cannot read the SSID. Do not "fix" that by reaching for one of the usual
+# commands — all of them have been checked on macOS 26:
 #
 #   ipconfig getsummary en0      -> "SSID : <redacted>" (literally that string)
 #   system_profiler SPAirPortDataType
@@ -34,13 +42,12 @@ interface=$(networksetup -listallhardwareports 2>/dev/null |
 power=$(networksetup -getairportpower "$interface" 2>/dev/null)
 
 if [ "${power##*: }" = "Off" ]; then
-  sketchybar --set "$NAME" icon="$ICON_WIFI" icon.color="$RED" label="off"
-elif ipconfig getsummary "$interface" 2>/dev/null | grep -q ' SSID : '; then
-  address=$(ipconfig getifaddr "$interface" 2>/dev/null)
-  sketchybar --set "$NAME" \
-    icon="$ICON_WIFI" \
-    icon.color="$GREEN" \
-    label="${address:-up}"
+  color=$RED
+elif ipconfig getsummary "$interface" 2>/dev/null | grep -q ' SSID : ' &&
+  ipconfig getifaddr "$interface" >/dev/null 2>&1; then
+  color=$GREEN
 else
-  sketchybar --set "$NAME" icon="$ICON_WIFI" icon.color="$YELLOW" label="—"
+  color=$YELLOW
 fi
+
+sketchybar --set "$NAME" icon="$ICON_WIFI" icon.color="$color"

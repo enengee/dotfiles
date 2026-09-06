@@ -4,7 +4,7 @@ AeroSpace tiling window manager and a SketchyBar status bar that shows, per
 monitor, the workspace visible on it and an app icon per window inside it.
 
 ```
-[ 󰍹 2 ] [  ] [  ] [  ]              [  ] [ ⌨ ABC ] [ 󰖩 192.168.0.2 ] [ 🔉 44% ] [ 🔋 87% ] [ 🕐 Sat 06 Sep 00:14:22 ]
+[ 󰍹 2 ] [  ] [  ] [  ]              [  ] [ ⌨ ABC ] [ 󰖩 ] [ 🔉 44% ] [ 🔋 87% ] [ 🕐 Sat 06 Sep 00:14:22 ]
 ```
 
 Workspace pills are built per monitor and labelled from whichever workspace is
@@ -124,10 +124,12 @@ event when a title changes, so showing them required a poll.
 - **More than `MAX_DISPLAYS` monitors show an empty left side.** Item groups are
   pre-created for that many display ids; raise it in `config.sh` if you attach
   more.
-- **Wi-Fi shows the IP, not the SSID.** Since macOS 14 the network name requires
+- **Wi-Fi is icon-only, with no network name.** Since macOS 14 the SSID requires
   Location Services authorization for the calling process, which a script
   SketchyBar spawns cannot get. `ipconfig`, `system_profiler` and `networksetup`
-  all refuse; `airport` was removed. See the comment in `plugins/wifi.sh`.
+  all refuse; `airport` was removed. The icon colour carries the state instead —
+  red off, yellow no usable connection, green connected. See the comment in
+  `plugins/wifi.sh`.
 - **Unmapped apps show a generic icon.** `plugins/icon_map.sh` is vendored from
   [sketchybar-app-font](https://github.com/kvndrsslr/sketchybar-app-font); apps it
   does not know fall back to `:default:`.
