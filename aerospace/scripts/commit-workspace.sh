@@ -43,4 +43,21 @@ target=$(aerospace list-workspaces --all 2>/dev/null | sed -n "$((index + 1))p")
 focused=$(aerospace list-workspaces --focused 2>/dev/null)
 [ "$target" != "$focused" ] || exit 0
 
-exec aerospace workspace "$target"
+# Focus the target, verifying it took. AeroSpace 0.21.3-Beta intermittently
+# focuses the target monitor's currently-visible workspace instead of the named
+# one — you ask for `home` and land on whatever was already showing there. It is
+# a race inside AeroSpace (bare `aerospace workspace <name>` reproduces it with no
+# scripts involved), and a re-issue reliably corrects it, so retry a couple of
+# times rather than leaving focus on the wrong workspace.
+#
+# Bounded and cheap: the loop exits the instant focus matches, so the common case
+# is a single call, and a miss costs one or two extra calls with a short settle.
+attempt=0
+while [ "$attempt" -lt 3 ]; do
+  aerospace workspace "$target" 2>/dev/null
+  # Let AeroSpace settle before checking; without this the read races the switch.
+  sleep 0.15
+  [ "$(aerospace list-workspaces --focused 2>/dev/null)" = "$target" ] && exit 0
+  attempt=$((attempt + 1))
+done
+exit 0
