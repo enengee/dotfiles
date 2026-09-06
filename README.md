@@ -151,14 +151,15 @@ precisely because focus has deliberately not moved yet while you cycle. Both
 scripts and the paint script derive the ring from `aerospace list-workspaces
 --all`, so they agree on order while sharing only the integer index.
 
-`commit-workspace.sh` focuses the target with a verify-and-retry loop, not a single
-call: AeroSpace 0.21.3-Beta intermittently focuses the target monitor's
-currently-visible workspace instead of the one you named (ask for `home`, land on
-whatever was already showing on that monitor). It is a race inside AeroSpace — bare
-`aerospace workspace <name>` reproduces it with no scripts involved — and a
-re-issue reliably corrects it, so the commit re-checks the focused workspace after
-each attempt and retries up to three times. This runs on Option release, off the
-interactive path, so the extra settle is not felt.
+`commit-workspace.sh` does not just `aerospace workspace <target>` — it runs
+`aerospace eval "workspace <target> ; move-mouse window-force-center"`, switching
+and recentring the pointer onto the target's window in one atomic call. This works
+around an AeroSpace 0.21.3-Beta quirk: focus-follows-mouse is off, yet a stationary
+pointer left over a window belonging to another visible workspace on the target
+monitor still steals focus right after a switch — so alt-tabbing from `upma` to
+`home` would land on `home` and then bounce to `personal` (the workspace the cursor
+happened to be over). Moving the pointer onto the target's own window removes the
+thief. It must be one `eval`: two separate calls leave a gap the bounce slips into.
 
 `alt-shift-tab` is the same mechanism for **windows**: it cycles the focused
 workspace's windows and commits focus on Option release. There is no separate HUD

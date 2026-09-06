@@ -43,21 +43,21 @@ target=$(aerospace list-workspaces --all 2>/dev/null | sed -n "$((index + 1))p")
 focused=$(aerospace list-workspaces --focused 2>/dev/null)
 [ "$target" != "$focused" ] || exit 0
 
-# Focus the target, verifying it took. AeroSpace 0.21.3-Beta intermittently
-# focuses the target monitor's currently-visible workspace instead of the named
-# one — you ask for `home` and land on whatever was already showing there. It is
-# a race inside AeroSpace (bare `aerospace workspace <name>` reproduces it with no
-# scripts involved), and a re-issue reliably corrects it, so retry a couple of
-# times rather than leaving focus on the wrong workspace.
+# Switch, and in the SAME atomic call move the pointer onto the target's focused
+# window.
 #
-# Bounded and cheap: the loop exits the instant focus matches, so the common case
-# is a single call, and a miss costs one or two extra calls with a short settle.
-attempt=0
-while [ "$attempt" -lt 3 ]; do
-  aerospace workspace "$target" 2>/dev/null
-  # Let AeroSpace settle before checking; without this the read races the switch.
-  sleep 0.15
-  [ "$(aerospace list-workspaces --focused 2>/dev/null)" = "$target" ] && exit 0
-  attempt=$((attempt + 1))
-done
-exit 0
+# Why: focus-follows-mouse is off, yet AeroSpace 0.21.3-Beta still lets a
+# stationary pointer steal focus right after a workspace switch. If the cursor is
+# sitting over a window belonging to another visible workspace on the target
+# monitor, switching to `home` lands there and then bounces to that other
+# workspace (ask for `home` from `upma`, end up on `personal`). Moving the pointer
+# onto the target's own window removes the window that was stealing focus.
+#
+# It must be one `aerospace eval`, not two calls: eval runs the commands together
+# server-side, so the bounce has no gap to slip into between the switch and the
+# mouse move. Two separate calls race and the bounce wins.
+#
+# window-force-center errors on an empty target (no window to centre on), but the
+# workspace switch in the same eval has already taken effect, so the error is
+# harmless — focus still lands correctly.
+exec aerospace eval "workspace $target ; move-mouse window-force-center"
