@@ -107,6 +107,50 @@ winsw_index=-1
 [ -f "$WINSW_INDEX_FILE" ] && read -r winsw_index <"$WINSW_INDEX_FILE" 2>/dev/null
 case "$winsw_index" in '' | *[!0-9-]*) winsw_index=-1 ;; esac
 
+# --- switcher detail line ----------------------------------------------------
+# "App — title" for whatever the active switcher has highlighted, shown at the
+# tail of the left region. Computed once here (it is display-independent) and
+# emitted by whichever branch draws the focused monitor below.
+#
+# The extra `list-windows` calls here run ONLY during a burst — the common
+# repaint path (focus changes, window changes) leaves detail_label empty and
+# pays nothing. Titles contain '|', so these queries use a tab separator and are
+# read with IFS=tab, unlike the '|' rows above which never carry a title.
+detail_label=""
+if [ "$winsw" = "on" ]; then
+  # The highlighted window itself: index into the focused workspace's window list.
+  detail_row=$(aerospace list-windows --workspace focused \
+    --format '%{app-name}	%{window-title}' 2>/dev/null | sed -n "$((winsw_index + 1))p")
+  detail_app=${detail_row%%	*}
+  detail_title=${detail_row#*	}
+  if [ -n "$detail_app" ]; then
+    if [ -n "$detail_title" ] && [ "$detail_title" != "$detail_app" ]; then
+      detail_label="$detail_app — $detail_title"
+    else
+      detail_label="$detail_app"
+    fi
+  fi
+elif [ "$switcher" = "on" ] && [ "$switcher_index" -ge 0 ]; then
+  # A workspace has no single window, so show its *focused* window as a stand-in
+  # for what you would land on. The ring order is list-workspaces --all.
+  detail_ws=$(aerospace list-workspaces --all 2>/dev/null | sed -n "$((switcher_index + 1))p")
+  if [ -n "$detail_ws" ]; then
+    detail_row=$(aerospace list-windows --workspace "$detail_ws" \
+      --format '%{app-name}	%{window-title}' 2>/dev/null | sed -n '1p')
+    detail_app=${detail_row%%	*}
+    detail_title=${detail_row#*	}
+    if [ -n "$detail_app" ]; then
+      if [ -n "$detail_title" ] && [ "$detail_title" != "$detail_app" ]; then
+        detail_label="$detail_app — $detail_title"
+      else
+        detail_label="$detail_app"
+      fi
+    fi
+    # Empty workspace: name it, so the panel is not blank.
+    [ -n "$detail_label" ] || detail_label="$detail_ws (empty)"
+  fi
+fi
+
 # --- nothing to do? -----------------------------------------------------------
 # Several subscribed events fire without changing anything the bar shows —
 # front_app_switched in particular. Comparing the raw AeroSpace output lets those
@@ -118,7 +162,8 @@ $mode
 $switcher
 $switcher_index
 $winsw
-$winsw_index"
+$winsw_index
+$detail_label"
 
 previous_inputs=""
 [ -f "$INPUT_STATE_FILE" ] && previous_inputs=$(<"$INPUT_STATE_FILE")
@@ -157,6 +202,18 @@ hide_switcher_slots() {
     slot=$((slot + 1))
     push_item "switcher.$1.$slot" drawing=off label="" click_script=""
   done
+}
+
+# The detail panel shows on the focused monitor while a burst is up (detail_label
+# non-empty), and is hidden everywhere else. Called from every display's branch so
+# the diff sees a definite state for it on each monitor every run.
+emit_detail() {
+  local display=$1 focused=$2
+  if [ -n "$detail_label" ] && [ "$focused" = "true" ]; then
+    push_item "detail.$display" drawing=on label="$detail_label"
+  else
+    push_item "detail.$display" drawing=off label=""
+  fi
 }
 
 # Display groups are walked in ascending id order, and every group is emitted on
@@ -198,6 +255,7 @@ while [ "$display" -lt "$MAX_DISPLAYS" ]; do
     hide_window_slots "$display"
     hide_switcher_slots "$display"
     push_item "overflow.$display" drawing=off label=""
+    emit_detail "$display" "false"
     continue
   fi
 
@@ -269,6 +327,7 @@ while [ "$display" -lt "$MAX_DISPLAYS" ]; do
       push_item "overflow.$display" drawing=off label=""
     fi
 
+    emit_detail "$display" "$is_focused"
     continue
   fi
 
@@ -326,6 +385,8 @@ while [ "$display" -lt "$MAX_DISPLAYS" ]; do
   else
     push_item "overflow.$display" drawing=off label=""
   fi
+
+  emit_detail "$display" "$is_focused"
 done
 
 # --- diff against the previous run -------------------------------------------

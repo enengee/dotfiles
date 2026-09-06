@@ -124,6 +124,28 @@ for display in $(seq 1 "$MAX_DISPLAYS"); do
     label.font="$TEXT_FONT:Bold:11.0"
     label.color="$WIN_INACTIVE_FG"
   )
+
+  # Single-line detail panel at the tail of the left region, shown only while a
+  # switcher burst is up: the highlighted window's app name and title, as
+  # "App — title". It names what you are about to land on, which the icon-only
+  # window pills and the workspace tabs cannot.
+  #
+  # max_chars caps the width so a long title cannot push the bar's right side off
+  # screen; SketchyBar truncates past it.
+  args+=(
+    --add item "detail.$display" left
+    --set "detail.$display"
+    display="$display"
+    drawing=off
+    background.drawing=on
+    background.color="$WIN_INACTIVE_BG"
+    icon.drawing=off
+    label.font="$TEXT_FONT:Regular:12.0"
+    label.color="$WIN_FOCUSED_FG"
+    label.padding_left=10
+    label.padding_right=10
+    label.max_chars="$DETAIL_MAX_CHARS"
+  )
 done
 
 # One invisible item drives every workspace pill and window slot from a single

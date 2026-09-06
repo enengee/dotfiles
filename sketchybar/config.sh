@@ -32,6 +32,11 @@ export MAX_DISPLAYS=4
 # workspaces are counted by the "+N" marker, the same one the window pills use.
 export MAX_SWITCHER_SLOTS=12
 
+# Character cap for the switcher detail panel (app name + window title at the tail
+# of the left region). Long titles are truncated to this so the bar's right side
+# cannot be pushed off screen.
+export DETAIL_MAX_CHARS=60
+
 # Where plugins/workspace.sh caches the last painted state, so it can send only
 # the items that actually changed, and the current AeroSpace binding mode. These
 # are private to SketchyBar's own children, which all inherit one TMPDIR.
