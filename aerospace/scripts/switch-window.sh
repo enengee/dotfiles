@@ -57,6 +57,13 @@ printf '%s' "$index" >"$WINSW_INDEX_FILE"
 
 # Latch on. commit-window.sh flips this back to "off" as it commits, so it also
 # guards against a second Option release committing twice.
+#
+# Also end any workspace-switch burst: switching modes without releasing Option
+# (alt-tab then alt-shift-tab, alt held throughout) must hand over cleanly, or the
+# stale flag keeps the workspace HUD showing and lets the release commit the wrong
+# mode. Only one switcher is ever "on".
+printf 'off' >"$SWITCHER_STATE_FILE"
+rm -f "$SWITCHER_INDEX_FILE"
 printf 'on' >"$WINSW_STATE_FILE"
 
 # Repaint. No focus change, so this is the only visible effect of the press.

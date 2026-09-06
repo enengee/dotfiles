@@ -55,6 +55,13 @@ printf '%s' "$index" >"$SWITCHER_INDEX_FILE"
 # Latch the HUD on. commit-workspace.sh flips this back to "off" as it commits, so
 # it also serves as the commit's idempotency guard: a second Option release with
 # no press in between finds "off" and does nothing.
+#
+# Also end any window-switch burst: switching modes without releasing Option
+# (alt-shift-tab then alt-tab, alt held throughout) must hand over cleanly, or the
+# stale flag leaves the window detail line showing and lets the release commit the
+# wrong mode. Only one switcher is ever "on".
+printf 'off' >"$WINSW_STATE_FILE"
+rm -f "$WINSW_INDEX_FILE"
 printf 'on' >"$SWITCHER_STATE_FILE"
 
 # Repaint. No workspace change, so this is the only thing that makes the press
