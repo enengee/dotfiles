@@ -43,8 +43,11 @@ export WIN_FOCUSED_FG=$TEXT
 export WIN_INACTIVE_BG=$SURFACE0
 export WIN_INACTIVE_FG=$SUBTEXT0
 
-# Workspace switcher HUD (replaces the window pills while alt-tab cycles)
-export SWITCHER_CURRENT_BG=$MAUVE # where alt-tab has landed
-export SWITCHER_CURRENT_FG=$CRUST
-export SWITCHER_OTHER_BG=$SURFACE0
-export SWITCHER_OTHER_FG=$SUBTEXT0
+# Workspace switcher HUD (replaces the window pills while alt-tab cycles).
+# Highlighted tab reuses the window pills' focused effect rather than a colour of
+# its own, so the HUD reads the same as the tabs it replaces and both stay in step
+# if that effect is ever retuned.
+export SWITCHER_CURRENT_BG=$WIN_FOCUSED_BG # where alt-tab has landed
+export SWITCHER_CURRENT_FG=$WIN_FOCUSED_FG
+export SWITCHER_OTHER_BG=$WIN_INACTIVE_BG
+export SWITCHER_OTHER_FG=$WIN_INACTIVE_FG
