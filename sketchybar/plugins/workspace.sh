@@ -108,14 +108,19 @@ winsw_index=-1
 case "$winsw_index" in '' | *[!0-9-]*) winsw_index=-1 ;; esac
 
 # --- switcher detail line ----------------------------------------------------
-# "App — title" for whatever the active switcher has highlighted, shown at the
-# tail of the left region. Computed once here (it is display-independent) and
-# emitted by whichever branch draws the focused monitor below.
+# "App — title" for the window the alt-shift-tab switcher has highlighted, shown
+# at the tail of the left region. Computed once here (it is display-independent)
+# and emitted by whichever branch draws the focused monitor below.
 #
-# The extra `list-windows` calls here run ONLY during a burst — the common
-# repaint path (focus changes, window changes) leaves detail_label empty and
-# pays nothing. Titles contain '|', so these queries use a tab separator and are
-# read with IFS=tab, unlike the '|' rows above which never carry a title.
+# Only the window switcher populates it. The alt-tab workspace switcher does not:
+# a workspace has no single window to name, and its tabs already show the
+# workspace names, so a detail line there is noise.
+#
+# The extra `list-windows` call runs ONLY during a window-switch burst — the
+# common repaint path (focus changes, window changes) and the workspace switcher
+# both leave detail_label empty and pay nothing. Titles contain '|', so this query
+# uses a tab separator and is read with IFS=tab, unlike the '|' rows above which
+# never carry a title.
 detail_label=""
 if [ "$winsw" = "on" ]; then
   # The highlighted window itself: index into the focused workspace's window list.
@@ -129,25 +134,6 @@ if [ "$winsw" = "on" ]; then
     else
       detail_label="$detail_app"
     fi
-  fi
-elif [ "$switcher" = "on" ] && [ "$switcher_index" -ge 0 ]; then
-  # A workspace has no single window, so show its *focused* window as a stand-in
-  # for what you would land on. The ring order is list-workspaces --all.
-  detail_ws=$(aerospace list-workspaces --all 2>/dev/null | sed -n "$((switcher_index + 1))p")
-  if [ -n "$detail_ws" ]; then
-    detail_row=$(aerospace list-windows --workspace "$detail_ws" \
-      --format '%{app-name}	%{window-title}' 2>/dev/null | sed -n '1p')
-    detail_app=${detail_row%%	*}
-    detail_title=${detail_row#*	}
-    if [ -n "$detail_app" ]; then
-      if [ -n "$detail_title" ] && [ "$detail_title" != "$detail_app" ]; then
-        detail_label="$detail_app — $detail_title"
-      else
-        detail_label="$detail_app"
-      fi
-    fi
-    # Empty workspace: name it, so the panel is not blank.
-    [ -n "$detail_label" ] || detail_label="$detail_ws (empty)"
   fi
 fi
 

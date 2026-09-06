@@ -158,14 +158,15 @@ switcher just moves which pill is accented, `scripts/switch-window.sh` advancing
 index and `scripts/commit-window.sh` focusing the selected window. With zero or one
 window it does nothing. The ring is `aerospace list-windows --workspace focused`.
 
-While either switcher is cycling, a one-line detail panel (`detail.$display`) at
-the tail of the left region names the highlighted target as `App — window title` —
-the highlighted window for `alt-shift-tab`, the highlighted workspace's first
-window as a stand-in for `alt-tab`. The window pills are icon-only and the
-workspace tabs show only names, so this is the only place the title appears. The
-`list-windows` calls that build it run *only* during a burst, so ordinary repaints
-pay nothing; `DETAIL_MAX_CHARS` (`config.sh`) truncates long titles so the panel
-cannot push the bar's right side off screen.
+While `alt-shift-tab` is cycling, a one-line detail panel (`detail.$display`) at
+the tail of the left region names the highlighted window as `App — window title`.
+The window pills are icon-only, so this is the only place the title appears. It is
+specific to the window switcher: `alt-tab` does not show it, since a workspace has
+no single window to name and its tabs already carry the workspace names. The
+`list-windows` call that builds the label runs *only* during a window-switch
+burst, so ordinary repaints and the workspace switcher pay nothing;
+`DETAIL_MAX_CHARS` (`config.sh`) truncates long titles so the panel cannot push the
+bar's right side off screen.
 
 Both switchers commit through the one alt-release helper: its `COMMIT_SCRIPT` is
 `scripts/commit-switch.sh`, which calls both commit scripts, and each is a no-op
