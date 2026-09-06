@@ -95,7 +95,7 @@ for a font whose weights you have.
 | `alt-1` … `alt-9`, `alt-0` | Focus the Nth window of the workspace, matching the bar's icon order |
 | `alt-h/j/k/l` | Focus left / down / up / right |
 | `alt-shift-h/j/k/l` | Move window |
-| `alt-tab` | Next workspace, wrapping round — spans all monitors; shows the switcher HUD |
+| `alt-tab` | Cycle workspaces (spans all monitors); switches on Option release |
 | `alt-shift-tab` | Move workspace to next monitor |
 | `alt-f` | Fullscreen |
 | `alt-minus` / `alt-equal` | Resize |
@@ -127,32 +127,35 @@ event when a title changes, so showing them required a poll.
 ## The alt-tab switcher HUD
 
 While you cycle workspaces with `alt-tab`, the focused monitor's window pills give
-way to one tab per workspace — the whole ring, in the order `alt-tab` walks it,
-with the one you have landed on accented. The other monitor's bar is left alone.
-The tabs are clickable. The workspace pill stays put, so the bar reads
-`[ 󰍹 psa ] [ home ] [ personal ] [ psa ] [ upma ]` while switching.
+way to one tab per workspace — the whole ring, in alphabetical order, with the tab
+you have highlighted accented. The other monitor's bar is left alone. The tabs are
+clickable. The workspace pill stays put, so the bar reads
+`[ 󰍹 personal ] [ home ] [ personal ] [ psa ] [ upma ]` while switching.
 
-Nothing schedules the HUD's appearance: `scripts/switch-workspace.sh` latches a
-flag and triggers a repaint, so it is up as fast as any other bar update.
+It behaves like cmd-tab: each press only moves the highlight, and the workspace
+switch is committed when you **release** Option — so intermediate workspaces never
+flash up on the way to the one you want. Two pieces cooperate:
 
-Taking it down is the awkward half. Nothing observable says when `alt` is
-released — AeroSpace has no key-release event and SketchyBar cannot see modifiers
-— so the end of a switching burst is inferred from a quiet period:
-`SWITCHER_HIDE_DELAY` seconds after the last press. That is one `sleep` per press,
-not a poll; nothing waits on it, so it costs no latency anywhere, and each press
-supersedes the previous sleeper through a counter file so holding `alt` and tabbing
-never hides the HUD mid-cycle. Raise the delay if it vanishes too eagerly.
+- `scripts/switch-workspace.sh` (the `alt-tab` binding) advances a selected index
+  in `~/.cache/sketchybar/switcher.index` and triggers a repaint. It changes no
+  focus. The HUD appears as fast as any other bar update — nothing is scheduled.
+- `scripts/commit-workspace.sh` reads that index, focuses the workspace, and hides
+  the HUD. It is run by `aerospace/helper/alt-release-watcher`, a small compiled
+  helper that watches for Option being released, because neither AeroSpace nor
+  SketchyBar can observe a key release. See `aerospace/helper/README.md`; it needs
+  Input Monitoring permission, and until the helper is installed and granted,
+  `alt-tab` highlights but never switches.
 
-Doing it properly — HUD up while `alt` is held, gone the instant it is released —
-needs a signed helper app with Input Monitoring permission watching `flagsChanged`.
-The alternative without any timer is to hide on the next window-focus change, which
-leaves the HUD stranded whenever you land somewhere and just start typing.
+The highlight is an index into the ring rather than the focused workspace,
+precisely because focus has deliberately not moved yet while you cycle. Both
+scripts and the paint script derive the ring from `aerospace list-workspaces
+--all`, so they agree on order while sharing only the integer index.
 
-Its two state files live in `~/.cache/sketchybar`, not `$TMPDIR` like the rest.
-They are the only state shared across process trees — written by a child of
-AeroSpace, read by a child of the SketchyBar daemon — and `${TMPDIR:-/tmp}`
-resolves per environment, so the two sides silently picked different paths and the
-HUD never appeared.
+The switcher's state files live in `~/.cache/sketchybar`, not `$TMPDIR` like the
+rest. They are the only state shared across process trees — written by children of
+AeroSpace and the launchd helper, read by a child of the SketchyBar daemon — and
+`${TMPDIR:-/tmp}` resolves per environment, so the sides silently picked different
+paths and the HUD never appeared.
 
 ## Known limitations
 

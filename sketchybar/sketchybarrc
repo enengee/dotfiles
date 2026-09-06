@@ -67,7 +67,7 @@ source "$ITEM_DIR/right.sh"
 # Drop the caches: the items were just recreated, so the previous run's state
 # says nothing about what is currently on the bar.
 rm -f "$STATE_FILE" "$INPUT_STATE_FILE" "$MODE_STATE_FILE" \
-  "$SWITCHER_STATE_FILE" "$SWITCHER_GEN_FILE"
+  "$SWITCHER_STATE_FILE" "$SWITCHER_INDEX_FILE"
 mkdir -p "$SKETCHYBAR_CACHE_DIR"
 
 sketchybar --update

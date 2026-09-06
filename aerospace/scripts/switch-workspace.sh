@@ -1,16 +1,17 @@
 #!/bin/bash
 #
-# alt-tab: advance the workspace ring and raise SketchyBar's switcher HUD, the
-# strip of workspace tabs that replaces the window pills while you cycle.
+# alt-tab: advance the switcher's highlight by one and repaint the HUD. This does
+# NOT change the focused workspace — cmd-tab style, the switch is committed only
+# when alt is released, by commit-workspace.sh, which the alt-release helper runs.
 #
-# The ring itself is AeroSpace's, fed a global list: `workspace next` on its own
-# is scoped to the focused monitor, so a workspace parked on another screen would
-# be unreachable. `list-workspaces --all` replaces that list via --stdin, keeping
-# AeroSpace's alphabetical order, and --wrap-around closes the circle.
+# Splitting selection from commit is the whole point of the redesign: holding alt
+# and tabbing moves a highlight through the ring with no visible workspace changes,
+# so intermediate workspaces never flash up on the way to the one you want.
 #
-# `--all` rather than a filtered list because it is the only form guaranteed to
-# contain the *focused* workspace, including when that workspace is empty; without
-# the current position in the list there is nothing to advance from.
+# The ring is "every workspace on every monitor, alphabetical" — what
+# `list-workspaces --all` returns. The highlight is an index into that list, kept
+# in SWITCHER_INDEX_FILE; the paint script reads the same list and the same index,
+# so the two agree on order without sharing anything else.
 
 # Homebrew is /opt/homebrew on Apple Silicon and /usr/local on Intel, and
 # AeroSpace launches callbacks with a minimal PATH, so set both rather than
@@ -21,42 +22,41 @@ CONFIG_DIR="${CONFIG_DIR:-$HOME/.config/sketchybar}"
 source "$CONFIG_DIR/config.sh"
 
 # sketchybarrc creates this, but do not depend on load order: without it every
-# write below fails and the HUD simply never appears. The test avoids the fork on
-# the common path.
+# write below fails and the HUD simply never appears.
 [ -d "$SKETCHYBAR_CACHE_DIR" ] || mkdir -p "$SKETCHYBAR_CACHE_DIR"
 
-# Latch the HUD on *before* switching, not after. Changing workspace fires its own
-# repaint, and a repaint that starts while the flag is still off paints the
-# ordinary window pills — then finishes after ours and wins, leaving the HUD
-# stillborn. Writing the flag first means every repaint the switch provokes
-# already agrees the HUD is up, whichever order they happen to run in.
+# The ring, and how many are in it. One call, shared with the paint script by
+# convention (same command, same order).
+ring_count=$(aerospace list-workspaces --all --count 2>/dev/null)
+[ -n "$ring_count" ] && [ "$ring_count" -gt 0 ] || exit 0
+
+# Where the highlight sits now. Absent (first press of a fresh burst) means start
+# from the focused workspace, so the first alt-tab steps off *where you are* rather
+# than off the top of the list.
+switcher_open=""
+[ -f "$SWITCHER_STATE_FILE" ] && read -r switcher_open <"$SWITCHER_STATE_FILE" 2>/dev/null
+
+if [ "$switcher_open" = "on" ] && [ -f "$SWITCHER_INDEX_FILE" ]; then
+  read -r index <"$SWITCHER_INDEX_FILE" 2>/dev/null
+else
+  # Start of a burst: anchor on the focused workspace's position in the ring.
+  focused=$(aerospace list-workspaces --focused 2>/dev/null)
+  index=$(aerospace list-workspaces --all | grep -nxF "$focused" 2>/dev/null | head -1)
+  index=${index%%:*}
+  # grep -n is 1-based; the ring is 0-based. Empty (focused not listed) -> -1 so
+  # the first advance lands on 0.
+  if [ -n "$index" ]; then index=$((index - 1)); else index=-1; fi
+fi
+
+case "$index" in '' | *[!0-9-]*) index=-1 ;; esac
+index=$(((index + 1) % ring_count))
+printf '%s' "$index" >"$SWITCHER_INDEX_FILE"
+
+# Latch the HUD on. commit-workspace.sh flips this back to "off" as it commits, so
+# it also serves as the commit's idempotency guard: a second Option release with
+# no press in between finds "off" and does nothing.
 printf 'on' >"$SWITCHER_STATE_FILE"
 
-# Claim a press number, which supersedes any hide still pending: only the newest
-# sleeper is allowed to act, so holding alt and tabbing never hides mid-cycle.
-generation=0
-[ -f "$SWITCHER_GEN_FILE" ] && read -r generation <"$SWITCHER_GEN_FILE" 2>/dev/null
-generation=$((generation + 1))
-printf '%s' "$generation" >"$SWITCHER_GEN_FILE"
-
-aerospace list-workspaces --all | aerospace workspace --wrap-around --stdin next
-
-# Repaint now that the ring has moved, so the HUD highlights where you landed.
+# Repaint. No workspace change, so this is the only thing that makes the press
+# visible.
 sketchybar --trigger aerospace_switcher_open
-
-# Take the HUD down once tabbing stops. Nothing observable says when alt is
-# released — AeroSpace has no key-release event and SketchyBar cannot see
-# modifiers — so the end of a switching burst has to be inferred from a quiet
-# period.
-#
-# One `sleep` per press, not a poll: nothing waits on it, so it adds no latency to
-# the HUD appearing or to any other repaint, and a superseded sleeper exits
-# without touching a thing.
-(
-  sleep "$SWITCHER_HIDE_DELAY"
-  current=""
-  [ -f "$SWITCHER_GEN_FILE" ] && read -r current <"$SWITCHER_GEN_FILE" 2>/dev/null
-  [ "$current" = "$generation" ] || exit 0
-  printf 'off' >"$SWITCHER_STATE_FILE"
-  sketchybar --trigger aerospace_switcher_close
-) >/dev/null 2>&1 &

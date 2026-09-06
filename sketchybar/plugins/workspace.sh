@@ -84,13 +84,19 @@ if [ -n "$mode" ] && [ "$mode" != "main" ]; then
 fi
 
 # --- switcher HUD state ------------------------------------------------------
-# Read, never written here: the alt-tab script owns this flag and sets it before
-# it changes workspace, so that every repaint the switch provokes — including the
-# ones this script is running concurrently for other events — agrees on whether
-# the HUD is up. Deriving it from SENDER instead would make the answer depend on
-# which of those runs finished last.
+# Read, never written here: the alt-tab scripts own these files and set them
+# before triggering the repaint, so that every repaint the burst provokes —
+# including ones this script is running concurrently for other events — agrees on
+# whether the HUD is up and which tab is highlighted. Deriving either from SENDER
+# would make the answer depend on which of those runs finished last.
+#
+# The highlight is an index into the ring (list-workspaces --all order), NOT the
+# focused workspace: while switching, focus has deliberately not moved yet.
 switcher=""
 [ -f "$SWITCHER_STATE_FILE" ] && read -r switcher <"$SWITCHER_STATE_FILE" 2>/dev/null
+switcher_index=-1
+[ -f "$SWITCHER_INDEX_FILE" ] && read -r switcher_index <"$SWITCHER_INDEX_FILE" 2>/dev/null
+case "$switcher_index" in '' | *[!0-9-]*) switcher_index=-1 ;; esac
 
 # --- nothing to do? -----------------------------------------------------------
 # Several subscribed events fire without changing anything the bar shows —
@@ -100,7 +106,8 @@ inputs="$workspace_rows
 $window_rows
 $focused_window
 $mode
-$switcher"
+$switcher
+$switcher_index"
 
 previous_inputs=""
 [ -f "$INPUT_STATE_FILE" ] && previous_inputs=$(<"$INPUT_STATE_FILE")
@@ -203,24 +210,28 @@ while [ "$display" -lt "$MAX_DISPLAYS" ]; do
   fi
 
   # With the switcher HUD up, this monitor's window pills give way to a tab per
-  # workspace — the whole alt-tab ring, in the order alt-tab walks it, with the
-  # one you have landed on accented. Only the focused monitor swaps: the other
-  # screen's bar is not what you are looking at while switching.
+  # workspace — the whole alt-tab ring, in ring order, with the *highlighted* tab
+  # accented. Highlight follows switcher_index, not focus: the whole point of the
+  # redesign is that focus has not moved yet while you cycle.
+  #
+  # Drawn on the monitor that currently has focus. Focus does not move during a
+  # burst, so this stays put on the screen you started tabbing from — which is
+  # where you are looking — until the commit on release moves it.
   if [ "$switcher" = "on" ] && [ "$is_focused" = "true" ]; then
     hide_window_slots "$display"
 
     slot=0
     for ring_line in "${workspace_lines[@]}"; do
       [ "$slot" -lt "$MAX_SWITCHER_SLOTS" ] || break
+      ring_index=$slot
       slot=$((slot + 1))
 
-      # display|workspace|is-visible|is-focused — only the name and the focused
-      # flag matter here; the ring spans every monitor.
+      # display|workspace|is-visible|is-focused — only the name is needed; the
+      # accent comes from the selected index, not any AeroSpace flag.
       rest=${ring_line#*|}
       ring_name=${rest%%|*}
-      rest=${rest#*|}
 
-      if [ "${rest#*|}" = "true" ]; then
+      if [ "$ring_index" = "$switcher_index" ]; then
         background=$SWITCHER_CURRENT_BG foreground=$SWITCHER_CURRENT_FG
       else
         background=$SWITCHER_OTHER_BG foreground=$SWITCHER_OTHER_FG

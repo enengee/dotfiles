@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd agent for alt-release-watcher.
+
+  install.sh templates __BINARY__, __COMMIT__ and __LOG__ to absolute paths and
+  writes the result to ~/Library/LaunchAgents. The label matches the filename, as
+  launchd requires.
+
+  RunAtLoad + KeepAlive: start with the login session and restart if it ever
+  exits, so the alt-release signal is always available once installed.
+
+  The Input Monitoring permission the watcher needs is bound to the binary, not
+  the agent, so it survives reinstalls as long as the compiled path is stable.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.local.aerospace.alt-release-watcher</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>__BINARY__</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>COMMIT_SCRIPT</key>
+        <string>__COMMIT__</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardErrorPath</key>
+    <string>__LOG__</string>
+</dict>
+</plist>

@@ -208,28 +208,28 @@ gaps.outer.right =      4
     # Workspaces are reached by cycling with alt-tab, below — there are no
     # per-workspace bindings, so nothing here names a workspace or assumes how
     # many exist.
-    # Cycle *every* workspace, cmd-tab style: each press moves to the next one and
-    # the last wraps back to the first, so repeated presses go round in a circle.
-    # The circle spans both monitors — landing on a workspace that lives on the
-    # other screen moves focus to that screen.
+    # Cycle *every* workspace, cmd-tab style: each press advances a highlight
+    # through the ring and the last wraps to the first. The circle spans both
+    # monitors. Crucially the workspace does NOT change on each press — the switch
+    # is committed only when alt is released, so intermediate workspaces never
+    # flash up on the way to the one you want.
     #
-    # The helper also raises SketchyBar's switcher HUD, which swaps this monitor's
-    # window pills for a tab per workspace while you cycle. It needs a script
-    # rather than a bare command for two reasons: the ring is a pipe (see the
-    # script), and the HUD flag has to be set before the workspace changes.
+    # Two halves make that work. This binding runs switch-workspace.sh, which only
+    # moves the highlight and repaints SketchyBar's switcher HUD. The commit — the
+    # actual `aerospace workspace` — is run by commit-workspace.sh, fired by a
+    # small launchd helper (aerospace/helper) that watches for Option being
+    # released, since neither AeroSpace nor SketchyBar can observe a key release.
+    # If that helper is not installed, alt-tab still highlights but never commits;
+    # see aerospace/helper/README.md.
     #
     # `bash -c` is needed because exec-and-forget does not expand $HOME.
     #
-    # Focus moves to the workspace's own screen rather than the workspace being
-    # dragged onto the focused one. Pulling it over is possible — move it with
-    # `move-workspace-to-monitor --workspace <ws> <focused monitor>` before
-    # focusing it — but it reads badly in practice: whichever screen you tab from
-    # slowly collects every workspace, and the screen a workspace is taken from is
-    # left showing a throwaway empty workspace that AeroSpace creates to fill it.
+    # Focus lands on the workspace's own screen rather than the workspace being
+    # dragged onto the focused one — see the git history for why pulling it over
+    # was tried and dropped.
     #
-    # Unlike cmd-tab this is positional, not most-recently-used: a binding cannot
-    # observe the modifier being released, so there is no keypress to end a
-    # "session" and commit an MRU reorder.
+    # Unlike cmd-tab this is positional, not most-recently-used: the ring is a
+    # fixed alphabetical order, not a recent-use stack.
     #
     # See: https://nikitabobko.github.io/AeroSpace/commands#workspace
     alt-tab = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/switch-workspace.sh"'
