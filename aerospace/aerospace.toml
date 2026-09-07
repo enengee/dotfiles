@@ -240,8 +240,9 @@ gaps.outer.right =      4
     # With zero or one window in the workspace it does nothing.
     alt-shift-tab = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/switch-window.sh"'
 
-    # Reload SketchyBar (picks up config edits without restarting the service)
-    alt-shift-r = 'exec-and-forget /bin/bash -c "PATH=/opt/homebrew/bin:/usr/local/bin:$PATH sketchybar --reload"'
+    # Reload SketchyBar (picks up config edits without restarting the service).
+    # Disabled: kept for reference, re-enable by uncommenting.
+    # alt-shift-r = 'exec-and-forget /bin/bash -c "PATH=/opt/homebrew/bin:/usr/local/bin:$PATH sketchybar --reload"'
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#mode
     alt-shift-semicolon = 'mode service'
