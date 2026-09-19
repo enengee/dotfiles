@@ -4,7 +4,7 @@
 #
 # `right` prepends, so the first item added ends up furthest right. Added in the
 # order below they read, left to right, as:
-#   [ caffeine ] [ input ] [ wifi ] [ volume ] [ battery ] [ clock ]
+#   [ keyboard lock ] [ caffeine ] [ input ] [ wifi ] [ volume ] [ battery ] [ clock ]
 
 status=(
   background.drawing=off
@@ -62,3 +62,25 @@ sketchybar --add item caffeine right \
   script="$PLUGIN_DIR/caffeine.sh" \
   click_script="$PLUGIN_DIR/caffeine.sh toggle" \
   --subscribe caffeine system_woke
+
+# Keyboard lock, for wiping the keys down: click deadens every key, click again
+# restores them. Grouped next to the caffeine toggle because both are click-to-
+# flip switches rather than readouts.
+#
+# No update_freq and no events: the lock only ever changes because this bar
+# changed it, so there is nothing to poll for. The plugin reads the live state
+# from `hidutil` on each render anyway, so the icon cannot drift.
+#
+# Its icon is a broom, not a keyboard, so it cannot be mistaken for the
+# input_source item above — see the note in icons.sh.
+# Locked and unlocked differ by colour and nothing else — same glyph, no label, no
+# background pill — so the plugin sets only icon.color and the glyph is declared
+# once here, the way the clock and battery items do it.
+sketchybar --add item keyboard_lock right \
+  --set keyboard_lock "${status[@]}" \
+  icon="$ICON_KEYBOARD_LOCK" \
+  icon.color="$OVERLAY0" \
+  label.drawing=off \
+  icon.font="$TEXT_FONT:Regular:15.0" \
+  script="$PLUGIN_DIR/keyboard_lock.sh" \
+  click_script="$PLUGIN_DIR/keyboard_lock.sh toggle"

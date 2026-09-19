@@ -31,6 +31,22 @@ printf -v ICON_INPUT '\xef\x84\x9c'     # U+F11C keyboard
 printf -v ICON_AWAKE '\xef\x81\xae'     # U+F06E eye
 printf -v ICON_ASLEEP '\xef\x81\xb0'    # U+F070 eye-slash
 
+# Keyboard lock, for wiping the keys down.
+#
+# Deliberately NOT a keyboard glyph. The input source item a couple of slots away
+# already draws fa-keyboard (U+F11C, ICON_INPUT above), and two keyboards side by
+# side are unreadable at 14pt. A broom reads as "keyboard cleaning" on its own.
+#
+# One glyph for both states: locked and unlocked differ by colour only, so the
+# state lives entirely in icon.color — see plugins/keyboard_lock.sh. That is also
+# why this is set on the item in items/right.sh rather than swapped per render the
+# way ICON_AWAKE / ICON_ASLEEP are above.
+#
+# Material Design glyph, so 4-byte UTF-8 rather than the 3-byte FontAwesome
+# escapes used elsewhere in this file. Verified present in Hack Nerd Font with
+# `fc-list ':charset=f00e2'`.
+printf -v ICON_KEYBOARD_LOCK '\xf3\xb0\x83\xa2' # U+F00E2 md-broom
+
 printf -v ICON_BATTERY_100 '\xef\x89\x80' # U+F240 battery-full
 printf -v ICON_BATTERY_75 '\xef\x89\x81'  # U+F241 battery-three-quarters
 printf -v ICON_BATTERY_50 '\xef\x89\x82'  # U+F242 battery-half
@@ -45,6 +61,7 @@ printf -v ICON_VOLUME_MUTE '\xef\x80\xa6' # U+F026 volume-off
 
 export ICON_WORKSPACE ICON_OVERFLOW ICON_CLOCK ICON_WIFI ICON_INPUT
 export ICON_AWAKE ICON_ASLEEP
+export ICON_KEYBOARD_LOCK
 export ICON_BATTERY_100 ICON_BATTERY_75 ICON_BATTERY_50 ICON_BATTERY_25 ICON_BATTERY_0
 export ICON_CHARGING
 export ICON_VOLUME_HIGH ICON_VOLUME_MID ICON_VOLUME_LOW ICON_VOLUME_MUTE

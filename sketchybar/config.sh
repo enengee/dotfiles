@@ -75,3 +75,15 @@ export WINSW_INDEX_FILE="$SKETCHYBAR_CACHE_DIR/winsw.index"
 
 # PID of the `caffeinate` process the caffeine item owns, when it is on.
 export CAFFEINE_PID_FILE="${TMPDIR:-/tmp}/sketchybar-caffeinate.pid"
+
+# Keyboard lock (the "wipe the keys down" toggle). The lock state itself is not
+# cached anywhere — it is read back from macOS via `hidutil` — so the only state
+# here is the watchdog that undoes the lock if it is never clicked off, and how
+# long that watchdog waits.
+#
+# The watchdog exists because this is the one item on the bar that can lock you
+# out of your own machine: with the keys dead, a SketchyBar crash would leave no
+# way to click the toggle back. Five minutes is far longer than wiping a keyboard
+# takes, so in normal use it never fires.
+export KEYBOARD_LOCK_PID_FILE="${TMPDIR:-/tmp}/sketchybar-keyboard-lock.pid"
+export KEYBOARD_LOCK_TIMEOUT=300
