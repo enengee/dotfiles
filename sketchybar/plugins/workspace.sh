@@ -269,10 +269,10 @@ while [ "$display" -lt "$MAX_DISPLAYS" ]; do
   # accented. Highlight follows switcher_index, not focus: the whole point of the
   # redesign is that focus has not moved yet while you cycle.
   #
-  # Drawn on the monitor that currently has focus. Focus does not move during a
-  # burst, so this stays put on the screen you started tabbing from — which is
-  # where you are looking — until the commit on release moves it.
-  if [ "$switcher" = "on" ] && [ "$is_focused" = "true" ]; then
+  # Drawn on every attached monitor. The ring is global (every workspace, every
+  # screen), so leaving the HUD on only the focused bar made unfocused screens
+  # look idle while you tabbed. Same tabs, same highlight, everywhere.
+  if [ "$switcher" = "on" ]; then
     hide_window_slots "$display"
 
     slot=0

@@ -126,9 +126,10 @@ event when a title changes, so showing them required a poll.
 
 ## The alt-tab switcher HUD
 
-While you cycle workspaces with `alt-tab`, the focused monitor's window pills give
-way to one tab per workspace — the whole ring, in alphabetical order, with the tab
-you have highlighted accented. The other monitor's bar is left alone. The tabs are
+While you cycle workspaces with `alt-tab`, every monitor's window pills give way
+to one tab per workspace — the whole ring, in alphabetical order, with the tab
+you have highlighted accented. Every attached bar shows the same HUD, so a
+workspace living on another screen is still visible while you tab. The tabs are
 clickable. The workspace pill stays put, so the bar reads
 `[ 󰍹 personal ] [ home ] [ personal ] [ psa ] [ upma ]` while switching.
 
