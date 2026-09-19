@@ -328,6 +328,10 @@ if.app-id = 'com.apple.AppStore' # App Store
 run = 'layout floating'
 
 [[on-window-detected]]
+if.app-id = 'com.apple.iCal' # Calendar
+run = 'layout floating'
+
+[[on-window-detected]]
 if.app-id = 'com.apple.ScreenContinuity' # iPhone Mirroring
 run = 'layout floating'
 
