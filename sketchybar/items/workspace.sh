@@ -172,4 +172,18 @@ args+=(
   system_woke
 )
 
+# Hidden. RegisterEventHotKey and the alt-release NSEvent monitor both drop
+# across a sleep; this re-registers them without bouncing AeroSpace.app.
+# Own item, not window_watcher: workspace.sh paints the left side and must
+# not grow a side effect that reloads AeroSpace on every focus change.
+args+=(
+  --add item hotkey_wake left
+  --set hotkey_wake
+  drawing=off
+  updates=on
+  script="$PLUGIN_DIR/hotkey_wake.sh"
+  --subscribe hotkey_wake
+  system_woke
+)
+
 sketchybar "${args[@]}"
