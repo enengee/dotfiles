@@ -16,10 +16,18 @@ status=(
 )
 
 # Seconds require a one-second tick; nothing emits an event for the clock.
+#
+# label.width is fixed because a monospace font alone does not give a constant
+# width: SketchyBar sizes text by the glyphs' *ink* bounds, rounded to whole
+# points, so the label measures 147-149pt depending on which digit ends it, and
+# every item to the clock's left shifts by a point as the seconds tick.
+# 159 = widest case (149, e.g. "Mon 08 Jan 18:08:04") + label padding 4 + 6.
+# Re-measure if the font, its size, the paddings or the date format change.
 sketchybar --add item clock right \
   --set clock "${status[@]}" \
   icon="$ICON_CLOCK" \
   icon.color="$MAUVE" \
+  label.width=159 \
   update_freq=1 \
   script="$PLUGIN_DIR/clock.sh" \
   \

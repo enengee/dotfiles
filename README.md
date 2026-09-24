@@ -86,6 +86,11 @@ whole bar sideways. SketchyBar reports the font you asked for, not the one that 
 resolved, so this fails invisibly. Swap `TEXT_FONT` in `sketchybar/config.sh` only
 for a font whose weights you have.
 
+Even with the right face, SketchyBar measures text by its ink bounds, so the clock
+still varies by a point or two with the digits. Its `label.width` in
+`sketchybar/items/right.sh` is pinned to the widest case; re-measure it if you
+change the font, size or date format.
+
 ## Keys
 
 `alt` is the modifier throughout.
