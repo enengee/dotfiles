@@ -99,6 +99,7 @@ change the font, size or date format.
 | `alt-h/j/k/l` | Focus left / down / up / right |
 | `alt-shift-h/j/k/l` | Move window |
 | `alt-tab` / `alt-shift-tab` | Cycle windows of the focused workspace, most-recently-used, with previews (provided by aerotab, separate repo) |
+| `cmd-tab` / `cmd-shift-tab` | Cycle every window in every workspace, grouped by workspace; `` ` `` / `` shift-` `` jumps to the next / previous workspace (provided by aerotab) |
 | `alt-f` | Fullscreen |
 | `alt-minus` / `alt-equal` | Resize |
 | `alt-shift-;` | Service mode (`esc` exits, `f` toggles float, `r` resets layout) |
