@@ -105,7 +105,7 @@ change the font, size or date format.
 | `alt-f` | Fullscreen |
 | `alt-minus` / `alt-equal` | Resize |
 | `alt-shift-;` | Service mode (`esc` exits, `f` toggles float, `r` resets layout) |
-| `alt-shift-r` | Reload SketchyBar |
+| `alt-shift-comma` | Re-layout the workspace's tiled windows into two half-width vertical-accordion columns, keeping focus |
 
 ## How the bar updates
 

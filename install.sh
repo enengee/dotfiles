@@ -105,6 +105,17 @@ else
   warn "swiftc not found — skipping alt-release helper; alt-tab will highlight but not commit"
 fi
 
+SIDES_SRC="$REPO/aerospace/helper/window-sides.swift"
+SIDES_BIN="$HOME/.local/bin/window-sides"
+if command -v swiftc >/dev/null; then
+  info "Building window-sides helper"
+  mkdir -p "$(dirname "$SIDES_BIN")"
+  swiftc -O "$SIDES_SRC" -o "$SIDES_BIN"
+  printf '    built %s\n' "$SIDES_BIN"
+else
+  warn "swiftc not found — skipping window-sides helper; alt-shift-comma will do nothing"
+fi
+
 info "Starting services"
 brew services restart sketchybar
 open -a AeroSpace 2>/dev/null || warn "start AeroSpace.app manually"
