@@ -29,7 +29,7 @@
 # a separate "+N" item marks the windows that did not fit.
 #
 # Everything below is a single `sketchybar` invocation. Each one costs a process
-# spawn, and this creates MAX_DISPLAYS * (MAX_WINDOW_SLOTS + MAX_SWITCHER_SLOTS + 2)
+# spawn, and this creates MAX_DISPLAYS * (MAX_WINDOW_SLOTS + 2)
 # items.
 
 args=(
@@ -37,10 +37,6 @@ args=(
   --add event aerospace_workspace_change
   --add event aerospace_focus_change
   --add event aerospace_mode_change
-  # Fired by the alt-tab script: raise the workspace switcher HUD, and take it
-  # down again once tabbing stops.
-  --add event aerospace_switcher_open
-  --add event aerospace_switcher_close
 )
 
 for display in $(seq 1 "$MAX_DISPLAYS"); do
@@ -83,34 +79,9 @@ for display in $(seq 1 "$MAX_DISPLAYS"); do
     )
   done
 
-  # Workspace tabs for the alt-tab switcher HUD, which replaces the window pills
-  # while cycling. Created *between* the window slots and the overflow marker on
-  # purpose: hidden items take no space, so that one order reads correctly in both
-  # modes — pill, windows, "+N" normally, and pill, workspaces, "+N" with the HUD
-  # up — and the marker can count the overflow of whichever list is showing.
-  #
-  # Text font, not the app font: these carry workspace names, and no slot ever has
-  # to switch fonts at repaint time.
-  for i in $(seq 1 "$MAX_SWITCHER_SLOTS"); do
-    args+=(
-      --add item "switcher.$display.$i" left
-      --set "switcher.$display.$i"
-      display="$display"
-      drawing=off
-      background.drawing=on
-      background.color="$SWITCHER_OTHER_BG"
-      icon.drawing=off
-      label.font="$TEXT_FONT:Bold:13.0"
-      label.color="$SWITCHER_OTHER_FG"
-      label.padding_left=8
-      label.padding_right=8
-    )
-  done
-
-  # "+N" marker for whatever did not fit — window pills normally, workspace tabs
-  # while the switcher HUD is up. Its own item rather than the last slot of either
-  # list, so no slot ever has to switch between the app font and the text font at
-  # repaint time.
+  # "+N" marker for window pills that did not fit. Its own item rather than the
+  # last window slot, so no slot ever has to switch between the app font and the
+  # text font at repaint time.
   args+=(
     --add item "overflow.$display" left
     --set "overflow.$display"
@@ -123,28 +94,6 @@ for display in $(seq 1 "$MAX_DISPLAYS"); do
     icon.color="$WIN_INACTIVE_FG"
     label.font="$TEXT_FONT:Bold:11.0"
     label.color="$WIN_INACTIVE_FG"
-  )
-
-  # Single-line detail panel at the tail of the left region, shown only while a
-  # switcher burst is up: the highlighted window's app name and title, as
-  # "App — title". It names what you are about to land on, which the icon-only
-  # window pills and the workspace tabs cannot.
-  #
-  # max_chars caps the width so a long title cannot push the bar's right side off
-  # screen; SketchyBar truncates past it.
-  args+=(
-    --add item "detail.$display" left
-    --set "detail.$display"
-    display="$display"
-    drawing=off
-    background.drawing=on
-    background.color="$WIN_INACTIVE_BG"
-    icon.drawing=off
-    label.font="$TEXT_FONT:Regular:12.0"
-    label.color="$WIN_FOCUSED_FG"
-    label.padding_left=10
-    label.padding_right=10
-    label.max_chars="$DETAIL_MAX_CHARS"
   )
 done
 
@@ -164,16 +113,14 @@ args+=(
   aerospace_workspace_change
   aerospace_focus_change
   aerospace_mode_change
-  aerospace_switcher_open
-  aerospace_switcher_close
   front_app_switched
   space_windows_change
   display_change
   system_woke
 )
 
-# Hidden. RegisterEventHotKey and the alt-release NSEvent monitor both drop
-# across a sleep; this re-registers them without bouncing AeroSpace.app.
+# Hidden. RegisterEventHotKey bindings drop across a sleep; this re-registers
+# them without bouncing AeroSpace.app.
 # Own item, not window_watcher: workspace.sh paints the left side and must
 # not grow a side effect that reloads AeroSpace on every focus change.
 args+=(

@@ -14,7 +14,7 @@
 #   * Two AeroSpace reads, not four: `list-workspaces --all` reports the
 #     visible *and* focused flags together, and the binding mode is cached.
 #   * Per-item diffing against the previous run, cached in $STATE_FILE. Without
-#     it every event would rewrite all ~44 items and SketchyBar would visibly
+#     it every event would rewrite all ~48 items and SketchyBar would visibly
 #     re-layout the whole bar; a focus change alters two or three items.
 #
 # It only ever *sets* items — the item set itself is fixed, created once by
@@ -83,60 +83,6 @@ if [ -n "$mode" ] && [ "$mode" != "main" ]; then
   mode_suffix=" ($(printf '%s' "${mode:0:1}" | tr '[:lower:]' '[:upper:]'))"
 fi
 
-# --- switcher HUD state ------------------------------------------------------
-# Read, never written here: the alt-tab scripts own these files and set them
-# before triggering the repaint, so that every repaint the burst provokes —
-# including ones this script is running concurrently for other events — agrees on
-# whether the HUD is up and which tab is highlighted. Deriving either from SENDER
-# would make the answer depend on which of those runs finished last.
-#
-# The highlight is an index into the ring (list-workspaces --all order), NOT the
-# focused workspace: while switching, focus has deliberately not moved yet.
-switcher=""
-[ -f "$SWITCHER_STATE_FILE" ] && read -r switcher <"$SWITCHER_STATE_FILE" 2>/dev/null
-switcher_index=-1
-[ -f "$SWITCHER_INDEX_FILE" ] && read -r switcher_index <"$SWITCHER_INDEX_FILE" 2>/dev/null
-case "$switcher_index" in '' | *[!0-9-]*) switcher_index=-1 ;; esac
-
-# Window switcher (alt-shift-tab): same idea, cycling the focused workspace's
-# windows. When on, the window pills accent this selected index instead of the
-# genuinely focused window, since focus has not moved yet.
-winsw=""
-[ -f "$WINSW_STATE_FILE" ] && read -r winsw <"$WINSW_STATE_FILE" 2>/dev/null
-winsw_index=-1
-[ -f "$WINSW_INDEX_FILE" ] && read -r winsw_index <"$WINSW_INDEX_FILE" 2>/dev/null
-case "$winsw_index" in '' | *[!0-9-]*) winsw_index=-1 ;; esac
-
-# --- switcher detail line ----------------------------------------------------
-# "App — title" for the window the alt-shift-tab switcher has highlighted, shown
-# at the tail of the left region. Computed once here (it is display-independent)
-# and emitted by whichever branch draws the focused monitor below.
-#
-# Only the window switcher populates it. The alt-tab workspace switcher does not:
-# a workspace has no single window to name, and its tabs already show the
-# workspace names, so a detail line there is noise.
-#
-# The extra `list-windows` call runs ONLY during a window-switch burst — the
-# common repaint path (focus changes, window changes) and the workspace switcher
-# both leave detail_label empty and pay nothing. Titles contain '|', so this query
-# uses a tab separator and is read with IFS=tab, unlike the '|' rows above which
-# never carry a title.
-detail_label=""
-if [ "$winsw" = "on" ]; then
-  # The highlighted window itself: index into the focused workspace's window list.
-  detail_row=$(aerospace list-windows --workspace focused \
-    --format '%{app-name}	%{window-title}' 2>/dev/null | sed -n "$((winsw_index + 1))p")
-  detail_app=${detail_row%%	*}
-  detail_title=${detail_row#*	}
-  if [ -n "$detail_app" ]; then
-    if [ -n "$detail_title" ] && [ "$detail_title" != "$detail_app" ]; then
-      detail_label="$detail_app — $detail_title"
-    else
-      detail_label="$detail_app"
-    fi
-  fi
-fi
-
 # --- nothing to do? -----------------------------------------------------------
 # Several subscribed events fire without changing anything the bar shows —
 # front_app_switched in particular. Comparing the raw AeroSpace output lets those
@@ -144,12 +90,7 @@ fi
 inputs="$workspace_rows
 $window_rows
 $focused_window
-$mode
-$switcher
-$switcher_index
-$winsw
-$winsw_index
-$detail_label"
+$mode"
 
 previous_inputs=""
 [ -f "$INPUT_STATE_FILE" ] && previous_inputs=$(<"$INPUT_STATE_FILE")
@@ -173,33 +114,12 @@ push_item() {
   flat+=(--set "$name" "$@")
 }
 
-# Blanking a whole list is needed from two places each, so both are functions.
 hide_window_slots() {
   local slot=0
   while [ "$slot" -lt "$MAX_WINDOW_SLOTS" ]; do
     slot=$((slot + 1))
     push_item "window.$1.$slot" drawing=off icon="" click_script=""
   done
-}
-
-hide_switcher_slots() {
-  local slot=0
-  while [ "$slot" -lt "$MAX_SWITCHER_SLOTS" ]; do
-    slot=$((slot + 1))
-    push_item "switcher.$1.$slot" drawing=off label="" click_script=""
-  done
-}
-
-# The detail panel shows on the focused monitor while a burst is up (detail_label
-# non-empty), and is hidden everywhere else. Called from every display's branch so
-# the diff sees a definite state for it on each monitor every run.
-emit_detail() {
-  local display=$1 focused=$2
-  if [ -n "$detail_label" ] && [ "$focused" = "true" ]; then
-    push_item "detail.$display" drawing=on label="$detail_label"
-  else
-    push_item "detail.$display" drawing=off label=""
-  fi
 }
 
 # Display groups are walked in ascending id order, and every group is emitted on
@@ -239,9 +159,7 @@ while [ "$display" -lt "$MAX_DISPLAYS" ]; do
   if [ "$has_monitor" = "0" ]; then
     push_item "workspace.$display" drawing=off label=""
     hide_window_slots "$display"
-    hide_switcher_slots "$display"
     push_item "overflow.$display" drawing=off label=""
-    emit_detail "$display" "false"
     continue
   fi
 
@@ -264,59 +182,6 @@ while [ "$display" -lt "$MAX_DISPLAYS" ]; do
       label.color="$WS_UNFOCUSED_FG"
   fi
 
-  # With the switcher HUD up, this monitor's window pills give way to a tab per
-  # workspace — the whole alt-tab ring, in ring order, with the *highlighted* tab
-  # accented. Highlight follows switcher_index, not focus: the whole point of the
-  # redesign is that focus has not moved yet while you cycle.
-  #
-  # Drawn on every attached monitor. The ring is global (every workspace, every
-  # screen), so leaving the HUD on only the focused bar made unfocused screens
-  # look idle while you tabbed. Same tabs, same highlight, everywhere.
-  if [ "$switcher" = "on" ]; then
-    hide_window_slots "$display"
-
-    slot=0
-    for ring_line in "${workspace_lines[@]}"; do
-      [ "$slot" -lt "$MAX_SWITCHER_SLOTS" ] || break
-      ring_index=$slot
-      slot=$((slot + 1))
-
-      # display|workspace|is-visible|is-focused — only the name is needed; the
-      # accent comes from the selected index, not any AeroSpace flag.
-      rest=${ring_line#*|}
-      ring_name=${rest%%|*}
-
-      if [ "$ring_index" = "$switcher_index" ]; then
-        background=$SWITCHER_CURRENT_BG foreground=$SWITCHER_CURRENT_FG
-      else
-        background=$SWITCHER_OTHER_BG foreground=$SWITCHER_OTHER_FG
-      fi
-
-      push_item "switcher.$display.$slot" \
-        drawing=on \
-        background.color="$background" \
-        label="$ring_name" \
-        label.color="$foreground" \
-        click_script="aerospace workspace '$ring_name'"
-    done
-
-    hidden=$slot
-    while [ "$hidden" -lt "$MAX_SWITCHER_SLOTS" ]; do
-      hidden=$((hidden + 1))
-      push_item "switcher.$display.$hidden" drawing=off label="" click_script=""
-    done
-
-    ring_total=${#workspace_lines[@]}
-    if [ "$ring_total" -gt "$MAX_SWITCHER_SLOTS" ]; then
-      push_item "overflow.$display" drawing=on label="$((ring_total - MAX_SWITCHER_SLOTS))"
-    else
-      push_item "overflow.$display" drawing=off label=""
-    fi
-
-    emit_detail "$display" "$is_focused"
-    continue
-  fi
-
   # Windows in this workspace, in AeroSpace's order. Counted first so the
   # overflow marker knows how many are hidden.
   ids=() apps=()
@@ -335,17 +200,7 @@ while [ "$display" -lt "$MAX_DISPLAYS" ]; do
 
     __icon_map "${apps[$index]}"
 
-    # Which pill is accented. Normally the genuinely focused window; but while the
-    # alt-shift-tab window switcher is up on this (focused) monitor, focus has not
-    # moved yet, so accent the *selected* index instead — the same
-    # highlight-then-commit-on-release model the workspace switcher uses.
-    if [ "$winsw" = "on" ] && [ "$is_focused" = "true" ]; then
-      if [ "$index" = "$winsw_index" ]; then
-        background=$WIN_FOCUSED_BG foreground=$WIN_FOCUSED_FG
-      else
-        background=$WIN_INACTIVE_BG foreground=$WIN_INACTIVE_FG
-      fi
-    elif [ "${ids[$index]}" = "$focused_window" ]; then
+    if [ "${ids[$index]}" = "$focused_window" ]; then
       background=$WIN_FOCUSED_BG foreground=$WIN_FOCUSED_FG
     else
       background=$WIN_INACTIVE_BG foreground=$WIN_INACTIVE_FG
@@ -364,15 +219,12 @@ while [ "$display" -lt "$MAX_DISPLAYS" ]; do
     slot=$((slot + 1))
     push_item "window.$display.$slot" drawing=off icon="" click_script=""
   done
-  hide_switcher_slots "$display"
 
   if [ "$total" -gt "$MAX_WINDOW_SLOTS" ]; then
     push_item "overflow.$display" drawing=on label="$((total - MAX_WINDOW_SLOTS))"
   else
     push_item "overflow.$display" drawing=off label=""
   fi
-
-  emit_detail "$display" "$is_focused"
 done
 
 # --- diff against the previous run -------------------------------------------

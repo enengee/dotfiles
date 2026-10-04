@@ -205,41 +205,6 @@ gaps.outer.right =      4
     alt-9 = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/focus-window.sh 9"'
     alt-0 = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/focus-window.sh 10"'
 
-    # Workspaces are reached by cycling with alt-tab, below — there are no
-    # per-workspace bindings, so nothing here names a workspace or assumes how
-    # many exist.
-    # Cycle *every* workspace, cmd-tab style: each press advances a highlight
-    # through the ring and the last wraps to the first. The circle spans both
-    # monitors. Crucially the workspace does NOT change on each press — the switch
-    # is committed only when alt is released, so intermediate workspaces never
-    # flash up on the way to the one you want.
-    #
-    # Two halves make that work. This binding runs switch-workspace.sh, which only
-    # moves the highlight and repaints SketchyBar's switcher HUD. The commit — the
-    # actual `aerospace workspace` — is run by commit-workspace.sh, fired by a
-    # small launchd helper (aerospace/helper) that watches for Option being
-    # released, since neither AeroSpace nor SketchyBar can observe a key release.
-    # If that helper is not installed, alt-tab still highlights but never commits;
-    # see aerospace/helper/README.md.
-    #
-    # `bash -c` is needed because exec-and-forget does not expand $HOME.
-    #
-    # Focus lands on the workspace's own screen rather than the workspace being
-    # dragged onto the focused one — see the git history for why pulling it over
-    # was tried and dropped.
-    #
-    # Unlike cmd-tab this is positional, not most-recently-used: the ring is a
-    # fixed alphabetical order, not a recent-use stack.
-    #
-    # See: https://nikitabobko.github.io/AeroSpace/commands#workspace
-    alt-tab = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/switch-workspace.sh"'
-    # alt-shift-tab: cycle the focused workspace's windows, exactly like alt-tab
-    # cycles workspaces. Each press moves the highlight among the window pills
-    # without changing focus; the switch commits when Option is released, via the
-    # same alt-release helper (see the alt-tab note above and aerospace/helper).
-    # With zero or one window in the workspace it does nothing.
-    alt-shift-tab = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/switch-window.sh"'
-
     alt-shift-comma = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/relayout-columns.sh"'
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#mode
